@@ -14,7 +14,8 @@ module register_file_fpga (
   input logic [17:0] SW,
   output logic [17:0] LEDR
 );
-
+logic [31:0][31:0] arr;
+integer i;
   // interface
   register_file_if rfif();
   // rf
@@ -26,6 +27,11 @@ assign rfif.rsel2 = SW[14:10];
 assign rfif.wdat = {29'b0,SW[17:15]};
 
 assign rfif.WEN = ~KEY[3];
+
+for (i = 0; i < 32; i = i+ 1)
+begin
+  assign arr[rfif.wsel] = rfif.wdat;
+end
 
 assign LEDR[8:5] = rfif.rdat1[3:0];
 assign LEDR[13:10] = rfif.rdat2[3:0];
