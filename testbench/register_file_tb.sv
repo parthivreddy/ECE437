@@ -14,11 +14,8 @@
 module register_file_tb;
 
   parameter PERIOD = 10;
-  integer i;
 
   logic CLK = 0, nRST;
-  logic [4:0] regNums;
-  logic [31:0] regVals;
 
   // test vars
   int v1 = 1;
@@ -48,10 +45,18 @@ module register_file_tb;
     .\CLK (CLK)
   );
 `endif
+endmodule
 
-
-program test;
-
+program test (
+  input logic CLK,
+  input logic [31:0] rdat1, rdat2,
+  output logic WEN, nRST,
+  output logic [4:0] rsel1, rsel2, wsel,
+  output logic [31:0] wdat
+);
+  parameter PERIOD = 10;
+  logic [4:0] regNums;
+  logic [31:0] regVals;
   
   task reset;
     begin
@@ -67,8 +72,8 @@ program test;
     input regNum;
     input val;
     begin
-      rfif.wsel = regNum;
-      rfif.wdat = val;
+      wsel = regNum;
+      wdat = val;
       #(PERIOD);
       $info("\nCheck if Specificied Register has appropriate Val\n");
     end
@@ -80,11 +85,11 @@ program test;
     input regVal1;
     input regVal2;
     begin
-      rfif.rsel1 = regNum1;
-      rfif.rsel2 = regNum2;
+      rsel1 = regNum1;
+      rsel2 = regNum2;
       #(PERIOD);
       $info("\nCheck if read values correctly\n");
-      if(rfif.rdat1 != regVal1 || rfif.rdat2 != regVal2)
+      if(rdat1 != regVal1 || rdat2 != regVal2)
         $error("Incorrect reading\n");
       else
         $info("Correct reading\n");
@@ -93,7 +98,7 @@ program test;
 
   task readWrite;
     begin
-      for(i = 0; i < 32; i = i+ 1)
+      for(int i = 0; i < 32; i = i+ 1)
       begin
         regNums = i;
         regVals = i;
@@ -105,7 +110,7 @@ program test;
 
 initial begin
   nRST = 1;
-  rfif.WEN = 1;
+  WEN = 1;
 
   reset();
 
@@ -122,4 +127,3 @@ initial begin
 end
 
 endprogram
-endmodule

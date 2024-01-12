@@ -1,27 +1,31 @@
 
 module register_file(
-  input logic clk,
-  input logic [3:0] KEY,
-  input logic [17:0] SW,
-  output logic [17:0] LEDR
+    input logic CLK,
+    input logic nRST,
+    input logic [31:0] wdat,
+    input logic [4:0] rsel1, 
+    input logic [4:0] rsel2, 
+    input logic [4:0] wsel,
+    input logic WEN,
+    output logic [31:0] rdat1, 
+    output logic [31:0] rdat2
 );
 logic [31:0][31:0] arr;
 logic [31:0][31:0] arrFF;
+// logic [31:0] wdat, rdat1, rdat2;
+// logic [4:0] rsel1, rsel2, wsel;
+// logic WEN;
 integer i;
-  // interface
-  register_file_if rfif();
-  // rf
-  register_file RF(CLOCK_50, KEY[2], rfif);
 
-assign wsel = SW[4:0];
-assign rsel1 = SW[9:5];
-assign rsel2 = SW[14:10];
-assign wdat = {29'b0,SW[17:15]};
+// assign wsel = SW[4:0];
+// assign rsel1 = SW[9:5];
+// assign rsel2 = SW[14:10];
+// assign wdat = {29'b0,SW[17:15]};
 
-assign WEN = ~KEY[3];
+// assign WEN = ~KEY[3];
 
-assign LEDR[8:5] = rdat1[3:0];
-assign LEDR[13:10] = rdat2[3:0];
+// assign LEDR[8:5] = rdat1[3:0];
+// assign LEDR[13:10] = rdat2[3:0];
 
 //MY CODE
 //give R0 constant value of 0
@@ -41,8 +45,8 @@ always_comb begin : COMBLGC
   end
 end
 
-always_ff @(posedge clk, negedge KEY[2]) begin : NXTLGC
-  if(!KEY[2])
+always_ff @(posedge CLK, negedge nRST) begin : NXTLGC
+  if(!nRST)
   begin
     for(i = 0; i < 32; i = i + 1)
       arrFF[i] <= '0;
