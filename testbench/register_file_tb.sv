@@ -28,7 +28,17 @@ module register_file_tb;
   // interface
   register_file_if rfif ();
   // test program
-  test PROG ();
+  test PROG (
+    .rdat2 (rfif.rdat2),
+    .rdat1 (rfif.rdat1),
+    .wdat (rfif.wdat),
+    .rsel2 (rfif.rsel2),
+    .rsel1 (rfif.rsel1),
+    .wsel (rfif.wsel),
+    .WEN (rfif.WEN),
+    .nRST (nRST),
+    .CLK (CLK)
+  );
   // DUT
 `ifndef MAPPED
   register_file DUT(CLK, nRST, rfif);
@@ -45,6 +55,17 @@ module register_file_tb;
     .\CLK (CLK)
   );
 `endif
+  // register_file DUT(
+  //   .rdat2 (rfif.rdat2),
+  //   .rdat1 (rfif.rdat1),
+  //   .wdat (rfif.wdat),
+  //   .rsel2 (rfif.rsel2),
+  //   .rsel1 (rfif.rsel1),
+  //   .wsel (rfif.wsel),
+  //   .WEN (rfif.WEN),
+  //   .nRST (nRST),
+  //   .CLK (CLK)
+  // );
 endmodule
 
 program test (
@@ -57,12 +78,15 @@ program test (
   parameter PERIOD = 10;
   logic [4:0] regNums;
   logic [31:0] regVals;
+  integer testNum = 0;
+  string testType;
   
   task reset;
     begin
+      testType = "RESET";
       nRST = 0;
       #(PERIOD);
-      $info("\nCheck To Make Sure Reset to 0\n");
+      $display("\nCheck To Make Sure Reset to 0\n");
       nRST = 1;
       #(PERIOD);
     end
@@ -72,10 +96,12 @@ program test (
     input regNum;
     input val;
     begin
+      testType = "Writing";
+      $display("Writing to %d reg at %t time\n", regNum, $time);
       wsel = regNum;
       wdat = val;
       #(PERIOD);
-      $info("\nCheck if Specificied Register has appropriate Val\n");
+      $display("\nCheck if Specificied Register has appropriate Val\n");
     end
   endtask
 
@@ -88,11 +114,11 @@ program test (
       rsel1 = regNum1;
       rsel2 = regNum2;
       #(PERIOD);
-      $info("\nCheck if read values correctly\n");
+      $display("\nChecking reg %d and %d, at time: %t\n", regNum1, regNum2, $time);
       if(rdat1 != regVal1 || rdat2 != regVal2)
         $error("Incorrect reading\n");
       else
-        $info("Correct reading\n");
+        $display("Correct reading: %t\n", $time);
     end
   endtask
 
@@ -111,6 +137,10 @@ program test (
 initial begin
   nRST = 1;
   WEN = 1;
+  rsel1 = 0;
+  rsel2 = 0;
+  wsel = 0;
+  wdat = 0;
 
   reset();
 

@@ -2,13 +2,7 @@
 module register_file(
     input logic CLK,
     input logic nRST,
-    input logic [31:0] wdat,
-    input logic [4:0] rsel1, 
-    input logic [4:0] rsel2, 
-    input logic [4:0] wsel,
-    input logic WEN,
-    output logic [31:0] rdat1, 
-    output logic [31:0] rdat2
+    register_file_if.rf rfif
 );
 logic [31:0][31:0] arr;
 logic [31:0][31:0] arrFF;
@@ -32,17 +26,14 @@ integer i;
 //assign arr[0] = '0;
 
 always_comb begin : COMBLGC
-  if(WEN)
-  begin
-    if(wsel != '0)
-      arr[wsel] = wdat;
-    else
-      arr[0] = '0;
-  end
-  else
-  begin
-    arr[wsel] = arr[wsel]; //here could put a for loop that would keep prev values for all registers?
-  end
+    arr = arrFF;
+    if(rfif.WEN)
+    begin
+        if(rfif.wsel != '0)
+            arr[rfif.wsel] = rfif.wdat;
+        else
+            arr[0] = '0;
+    end
 end
 
 always_ff @(posedge CLK, negedge nRST) begin : NXTLGC
@@ -59,8 +50,8 @@ always_ff @(posedge CLK, negedge nRST) begin : NXTLGC
   
 end
 
-assign rdat1 = arrFF[rsel1];
-assign rdat2 = arrFF[rsel2];
+assign rfif.rdat1 = arrFF[rfif.rsel1];
+assign rfif.rdat2 = arrFF[rfif.rsel2];
 
 // for (i = 0; i < 32; i = i+ 1)
 // begin
