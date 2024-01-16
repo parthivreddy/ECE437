@@ -1,7 +1,10 @@
-import cpu_types_pkg::*;
+`include "cpu_types_pkg.vh"
+`include "ALU_if.vh"
+
 module ALU (
     ALU_if.alu alu
 );
+import cpu_types_pkg::*;
 reg signed [31:0] bSigned, aSigned;
 logic ovTest, negTest, zeroTest;
 
