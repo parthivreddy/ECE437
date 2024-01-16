@@ -20,13 +20,13 @@ interface ALU_if;
 
   // register file ports
   modport alu (
-    input   port_a, port_b, op;
-    output  neg, ov, zero, ALU_output;
+    input   port_a, port_b, op,
+    output  neg, ov, zero, ALU_output
   );
   // register file tb
   modport tb (
-    output   port_a, port_b, op;
-    input  neg, ov, zero, ALU_output;
+    output   port_a, port_b, op,
+    input  neg, ov, zero, ALU_output
   );
 endinterface
 

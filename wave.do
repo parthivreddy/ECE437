@@ -1,12 +1,8 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /register_file_tb/CLK
+add wave -noupdate /register_file_tb/CLK
 add wave -noupdate /register_file_tb/nRST
-add wave -noupdate /register_file_tb/v1
-add wave -noupdate /register_file_tb/v2
-add wave -noupdate /register_file_tb/v3
-add wave -noupdate /register_file_tb/DUT/CLK
-add wave -noupdate /register_file_tb/DUT/nRST
 add wave -noupdate /register_file_tb/PROG/testType
 add wave -noupdate /register_file_tb/rfif/WEN
 add wave -noupdate -radix decimal /register_file_tb/rfif/wsel
@@ -34,4 +30,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {1 us}
+WaveRestoreZoom {0 ns} {219 ns}

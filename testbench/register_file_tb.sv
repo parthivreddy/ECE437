@@ -172,6 +172,7 @@ program test (
     begin
       testType = "RESET";
       nRST = 0;
+      rfif.wdat = 0;
       #(PERIOD);
       $display("\nCheck To Make Sure Reset to 0\n");
       nRST = 1;
@@ -232,6 +233,11 @@ initial begin
   rfif.wdat = 0;
 
   reset();
+  write(5'd0, 32'd7);
+  write(5'd1, 32'd3);
+  read(5'd0, 5'd1, 32'd0, 32'd3);
+
+  reset();
 
   write(5'd10, 32'd10);
   write(5'd9, 32'd9);
@@ -241,6 +247,8 @@ initial begin
   write(5'd0, 32'd100);
   write(5'd5, 32'd5);
   read(5'd0, 5'd5, 32'd0, 32'd5);
+
+  reset();
 
   readWrite();
 end
