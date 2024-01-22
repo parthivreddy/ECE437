@@ -47,25 +47,33 @@ testType = "Shift Left";
 alu.op = ALU_SLL;
 alu.port_a = 3;
 alu.port_b = 4;
-assert(alu.ALU_output == 32) else $display("WRONG1\n");
 
 #(PERIOD);
+
+assert(alu.ALU_output == 32) else $display("WRONG1\n");
+
+
 
 testType = "Shift Right";
 alu.op = ALU_SRL;
 alu.port_a = 2;
 alu.port_b = 16;
-assert(alu.ALU_output == 4) else $display("WRONG2\n");
 
 #(PERIOD);
+
+assert(alu.ALU_output == 4) else $display("WRONG2\n");
+
 
 testType = "ADD";
 alu.op = ALU_ADD;
 alu.port_a = 13;
 alu.port_b = 25;
-assert(alu.ALU_output == alu.port_a + alu.port_b) else $display("WRONG3\n");
 
 #(PERIOD);
+
+assert(alu.ALU_output == alu.port_a + alu.port_b) else $display("WRONG3\n");
+
+
 
 testType = "ADD OVERFLOW";
 alu.op = ALU_ADD;
