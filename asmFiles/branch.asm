@@ -15,13 +15,11 @@ andi $4, $4, 0
 ori  $4, $4, 0xFF04
 
 beq $1, $2, EQUAL
-
 bne $1, $2, LESS
 
 addi $2, $2, -1
 
 bne $1, $2, LESS2
-
 beq $1, $2, EQUAL2
 
 EQUAL:
