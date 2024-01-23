@@ -12,13 +12,17 @@ ori  $2, $2, 0x0BAD
 andi $3, $3, 0
 ori  $3, $3, 0xFF00
 
+ori $5, $0, 0xFF08
+
+
+
 
 jal next
 sw  $2, 0($3)
 
 nextnext:
     sw $1, 4($3)
-    addi $4, $31, 8 
+    addi $4, $31, 20
     jr $4
     halt
     sw $1, 8($3)
@@ -31,5 +35,4 @@ next:
     j nextnext
     sw $2, 4($3)
 
- 
 
