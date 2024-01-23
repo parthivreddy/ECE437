@@ -1,0 +1,13 @@
+# Current time Mon Jan 22 19:11:00 2024
+# Program = vish
+# Id = "10.7a"
+# Version = "2018.03"
+# Date = "Mar 26 2018"
+# Platform = linux
+# 0    0x0828f250: '<unknown (@0x828f250)>'
+# 1    0x0829abb8: 'wave_undo + 0x118' in '/package/eda/mg/questa10.7a/questasim/linux/vish'
+# 2    0x0824b0b6: '<unknown (@0x824b0b6)>'
+# 3    0x08518a1a: '<unknown (@0x8518a1a)>'
+# 4    0xfffffffb: '<unknown (@0xfffffffb)>'
+# End of Stack Trace
+
