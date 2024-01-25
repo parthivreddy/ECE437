@@ -1,6 +1,7 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /memory_control_tb/PROG/testNum
+add wave -noupdate /memory_control_tb/PROG/res
 add wave -noupdate /memory_control_tb/PROG/testType
 add wave -noupdate /memory_control_tb/CLK
 add wave -noupdate /memory_control_tb/nRST

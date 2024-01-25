@@ -68,7 +68,6 @@ task reset;
     res = "in reset";
     cif0.dREN = 0;
     cif0.dWEN = 0;
-    cif0.iaddr = 0;
     cif0.daddr = 0;
 endtask
 
@@ -162,7 +161,15 @@ task automatic dump_memory2();
 
 initial begin
     nRST = 1;
-    dump_memory();
+    //dump_memory();
+    nRST = 1;
+    cif0.dREN = 0;
+    cif0.dWEN = 0;
+    cif0.dstore = 0;
+    cif0.iaddr = 0;
+    cif0.daddr = 0;
+    cif0.iREN = 1;
+    //dump_memory();
     // nRST = 1;
     // cif0.dREN = 0;
     // cif0.dWEN = 0;
@@ -170,44 +177,44 @@ initial begin
     // cif0.iaddr = 0;
     // cif0.daddr = 0;
     // cif0.iREN = 1;
-    // //dump_memory();
-    // // nRST = 1;
-    // // cif0.dREN = 0;
-    // // cif0.dWEN = 0;
-    // // cif0.dstore = 0;
-    // // cif0.iaddr = 0;
-    // // cif0.daddr = 0;
-    // // cif0.iREN = 1;
 
-    // //TEST CASE 1
-    // testType = "Regular Instruction";
-    // instReq(32'h01234567);
-    // #(4*PERIOD);
+    //TEST CASE 1
+    testType = "Regular Instruction";
+    instReq(32'h01234567);
+    #(4*PERIOD);
     
-    // //TEST CASE 2
+    //TEST CASE 2
 
 
 
-    // //TEST CASE 3
-    // testType = "Store from RAM";
-    // instReq(32'h00000003);
-    // #(PERIOD);
-    // dataWrite(32'h00000004, 44); //write 44 to address 4 in RAM
-    // #(4*PERIOD);
-    // reset();
-    // #(PERIOD);
-    // res = "not in reset";
-    // //dump_memory2();
+    //TEST CASE 3
+    testType = "Store from RAM";
+    instReq(32'h00000003);
+    #(PERIOD);
+    dataWrite(32'h00000004, 44); //write 44 to address 4 in RAM
+    #(4*PERIOD);
+    reset();
+    #(PERIOD);
+    res = "not in reset";
+    
 
-    // testType = "LOAD from RAM";
-    // instReq(32'h00000001); //request instruction from address 5
-    // #(PERIOD);
-    // dataRead(32'h00000004); //request data from address 4
-    // #(4*PERIOD);
-    // reset();
-    // #(PERIOD);
-    // res = "not in reset";
+    testType = "LOAD from RAM";
+    instReq(32'h00000001); //request instruction from address 5
+    #(PERIOD);
+    dataRead(32'h00000004); //request data from address 4
+    #(4*PERIOD);
+    reset();
+    #(PERIOD);
+    res = "not in reset";
+    //dump_memory2();
 
+    testType = "Reading I and D at same time";
+    instReq(32'h00000004);
+    dataRead(32'h00000004);
+    #(PERIOD);
+    reset();
+    #(PERIOD);
+    res = "not in reset";
 end
 
 
