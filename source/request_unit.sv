@@ -3,10 +3,12 @@
 // alu op, mips op, and instruction type
 `include "cpu_types_pkg.vh"
 
-module datapath (
+//MAYBE IMEMREN HAS TO BE REGISTERED
+//ALLEERTTT
+
+module request_unit (
   input logic CLK, nRST,
-  input logic MemRead, MemWrite,
-  datapath_cache_if.dp dpif
+  request_unit_if.rq rqif
 );
   // import types
   import cpu_types_pkg::*;
@@ -17,19 +19,22 @@ module datapath (
   // pc init
   parameter PC_INIT = 0;
 
-  assign dpif.imemREN = ihit ? 0 : 1;
+  //assign it to !halt
+  assign rqif.imemREN = 1;
+
+  //Might have to deassert REN and WEN 1 clock cycle after dhit
 
   always_comb
   begin: CMBLGC
-    if(dhit)
+    if(rqif.dhit)
     begin
         nDmemREN = 0;
         nDmemWEN = 0;
     end
     else
     begin
-        nDmemREN = MemRead ? 1 : 0;
-        nDmemWEN = MemWrite ? 1 : 0;
+        nDmemREN = rqif.MemRead ? 1 : 0;
+        nDmemWEN = rqif.MemWrite ? 1 : 0;
     end
 
   end
@@ -38,13 +43,13 @@ module datapath (
 
     if(!nRST)
     begin
-        dpif.dmemREN <= 0;
-        dpif.dmemWEN <= 0;
+        rqif.dmemREN <= 0;
+        rqif.dmemWEN <= 0;
     end
     else
     begin
-        dpif.dmemREN <= nDmemREN;
-        dpif.dmemWEN <= nDmemWEN;
+        rqif.dmemREN <= nDmemREN;
+        rqif.dmemWEN <= nDmemWEN;
     end
   end
 

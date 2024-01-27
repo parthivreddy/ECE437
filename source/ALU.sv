@@ -27,16 +27,25 @@ always_comb begin : COMBLGC
     endcase
 end
 
-always_comb 
-begin
-    alu.ov = ((alu.port_b[31] == alu.port_a[31]) && (alu.ALU_output[31] != alu.port_a[31])) ? 1 : 0;
-    alu.neg = (alu.ALU_output[31] == 1) ? 1 : 0;
-    alu.zero = (alu.ALU_output == '0) ? 1 : 0;
-    ovTest = ((alu.port_b[31] == alu.port_a[31]) && (alu.ALU_output[31] != alu.port_a[31])) ? 1 : 0;
-    negTest = (alu.ALU_output[31] == 1) ? 1 : 0;
-    zeroTest = (alu.ALU_output == '0) ? 1 : 0;
+// always_comb 
+// begin
+//     alu.ov = ((alu.port_b[31] == alu.port_a[31]) && (alu.ALU_output[31] != alu.port_a[31])) ? 1 : 0;
+//     alu.neg = (alu.ALU_output[31] == 1) ? 1 : 0;
+//     alu.zero = (alu.ALU_output == '0) ? 1 : 0;
+//     ovTest = ((alu.port_b[31] == alu.port_a[31]) && (alu.ALU_output[31] != alu.port_a[31])) ? 1 : 0;
+//     negTest = (alu.ALU_output[31] == 1) ? 1 : 0;
+//     zeroTest = (alu.ALU_output == '0) ? 1 : 0;
 
-end
+// end
+
+
+//POSSIBLY ONLY assign zero within sub test
+assign alu.ov = ((alu.port_b[31] == alu.port_a[31]) && (alu.ALU_output[31] != alu.port_a[31])) ? 1 : 0;
+assign alu.neg = (alu.ALU_output[31] == 1) ? 1 : 0;
+assign alu.zero = (alu.ALU_output == '0) ? 1 : 0;
+assign ovTest = ((alu.port_b[31] == alu.port_a[31]) && (alu.ALU_output[31] != alu.port_a[31])) ? 1 : 0;
+assign negTest = alu.ALU_output[31];
+assign zeroTest = (alu.ALU_output == '0) ? 1 : 0;
 
 
 endmodule
