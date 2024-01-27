@@ -20,7 +20,7 @@ module memory_control_tb;
     test PROG(CLK, nRST, ramif, cif0, ccif);
 
     ram DUT0(CLK, nRST, ramif);
-    memory_control DUT1(CLK, ccif);
+    memory_control DUT1(CLK, nRST, ccif);
 
     assign ramif.ramstore = ccif.ramstore;
     assign ramif.ramaddr = ccif.ramaddr;

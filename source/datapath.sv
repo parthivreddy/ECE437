@@ -46,6 +46,8 @@ module datapath (
   //Sign Extension Signal
   logic [31:0] imm32;
 
+  logic [31:0] pcTemp;
+
 
 
 
@@ -77,16 +79,19 @@ module datapath (
     end
   end
 
-
-
   //if ihit then update nPC
   always_comb begin : PCUPDT
     nPC = PC;
-    if(dpif.ihit)
+    if(dpif.ihit && !dpif.halt)
     begin
-      if((ctif.Beq && alif.zero) || ctif.Jump || (ctif.Bne && !alif.zero))
+      if((ctif.Beq && alif.zero) || (ctif.Bne && !alif.zero))
       begin
         nPC = PC + {imm32[29:0], 2'b0};
+      end
+      else if(ctif.Jump)
+      begin
+        pcTemp = PC + 4;
+        nPC = {pcTemp[31:28], dpif.imemload[25:0], 2{1'b0}};
       end
       else
       begin
@@ -96,6 +101,9 @@ module datapath (
   end
 
   //assign signals straight to output
+  assign dpif.dmemREN = dpif.halt ? 0 : rqif.dmemREN;
+  assign dpif.dmemWEN = dpif.halt ? 0 : rqif.dmemWEN;
+  assign dpif.imemREN = dpif.halt ? 0 : rqif.imemREN;
   assign dpif.imemaddr = PC;
   assign dpif.dmemaddr = alif.ALU_output;
   assign dpif.dmemstore = rfif.rdat2;
@@ -103,6 +111,7 @@ module datapath (
 
   //Instuction Decoding
   assign ctif.opcode = opcode_t'(dpif.imemload[31:26]);
+  assign ctif.func = funct_t'(dpif.imemload[5:0]);
   assign rs = dpif.imemload[25:21];
   assign rt = dpif.imemload[20:16];
   assign rd = dpif.imemload[15:11];
@@ -114,12 +123,19 @@ module datapath (
   //Register File Interactions
   assign rfif.rsel1 = rs;
   assign rfif.rsel2 = rt;
-  assign rfif.WEN = ctif.RegWr;
+  assign rfif.WEN = (ctif.RegWr && (dpif.ihit || dpif.dhit));
   //assign rfif.WEN = ctif.RegWr && (dpif.ihit || dpif.dhit);
 
   //ALU Interactions
   assign alif.port_a = rfif.rdat1;
   assign alif.port_b = ctif.ALUSrc ? imm32 : rfif.rdat2;
+  assign alif.op = ctif.ALUCtrl;
+
+  //Control to Request
+  assign rqif.ihit = dpif.ihit;
+  assign rqif.dhit = dpif.dhit;
+  assign rqif.MemRead = ctif.MemRead;
+  assign rqif.MemWrite = ctif.MemWrite;
 
 
   always_comb begin : RGFILE

@@ -43,7 +43,11 @@ module control_unit (
         begin
             ctif.ALUCtrl = ALU_SRL;
         end
-        6'b?0?00?:
+        6'b001000:
+        begin
+            ctif.RegWr = 0;
+        end
+        6'b?0000?:
         begin
             ctif.ALUCtrl = ALU_ADD;
         end
@@ -84,6 +88,7 @@ module control_unit (
     end
     6'b000011: //JAL
     begin
+        ctif.RegWr = 1;
         ctif.Jump = 1;
         ctif.Link = 1;
         ctif.ExtOp = 1;
