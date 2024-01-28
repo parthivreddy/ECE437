@@ -7,8 +7,8 @@
   ori   $1,$zero,0xD269
   ori   $2,$zero,0x37F1
 
-  ori   $21,$zero,0x80
-  ori   $22,$zero,0xF0
+  ori   $21,$zero,0xFF00
+  ori   $22,$zero,0xFC00
 
 # Now running all R type instructions
   or    $3,$1,$2

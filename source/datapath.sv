@@ -48,6 +48,9 @@ module datapath (
 
   logic [31:0] pcTemp;
 
+  logic test;
+  logic ntest;
+
 
 
 
@@ -70,28 +73,37 @@ module datapath (
     if(!nRST)
     begin
       PC <= PC_INIT;
-      dpif.halt <= 0;
+      dpif.halt <= ctif.Halt;
+      //test <= 0;
     end
     else
     begin
       PC <= nPC;
-      dpif.halt <= nHalt; //MIGHT BE DIFFERENT 
+      //dpif.halt <= nHalt; //MIGHT BE DIFFERENT 
+      dpif.halt <= nHalt;
+      //test <= ntest;
     end
   end
 
   //if ihit then update nPC
   always_comb begin : PCUPDT
     nPC = PC;
+    pcTemp = 0;
     if(dpif.ihit && !dpif.halt)
     begin
       if((ctif.Beq && alif.zero) || (ctif.Bne && !alif.zero))
       begin
-        nPC = PC + {imm32[29:0], 2'b0};
+        pcTemp = PC + 4;
+        nPC = (pcTemp) + (imm32 << 2);
       end
       else if(ctif.Jump)
       begin
         pcTemp = PC + 4;
-        nPC = {pcTemp[31:28], dpif.imemload[25:0], 2{1'b0}};
+        nPC = {pcTemp[31:28], dpif.imemload[25:0], {2{1'b0}}};
+      end
+      else if(ctif.JR)
+      begin
+        nPC = rfif.rdat1;
       end
       else
       begin
@@ -108,6 +120,7 @@ module datapath (
   assign dpif.dmemaddr = alif.ALU_output;
   assign dpif.dmemstore = rfif.rdat2;
   assign nHalt = ctif.Halt | dpif.halt; //dpif.halt is actual output but flip flopped
+  //assign ntest = ctif.Halt | test;
 
   //Instuction Decoding
   assign ctif.opcode = opcode_t'(dpif.imemload[31:26]);
@@ -160,7 +173,7 @@ module datapath (
       end
       else if(ctif.Link)
       begin
-        rfif.wdat = nPC + 4;
+        rfif.wdat = PC + 4;
       end
       else if(ctif.MemtoReg)
       begin

@@ -2,11 +2,11 @@ org     0x0000
 andi    $29, $29, 0
 ori     $29, $29, 0xFFFC 
 andi    $8, $8, 0
-ori     $8, $8, 3
+ori     $8, $8, 1
 andi    $9, $9, 0
-ori     $9, $9, 4
-ori     $14, $0, 6
-ori     $15, $0, 5
+ori     $9, $9, 2
+ori     $14, $0, 2
+ori     $15, $0, 1
 push    $8
 push    $9
 push    $14

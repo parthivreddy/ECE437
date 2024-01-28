@@ -33,11 +33,12 @@ module request_unit (
     end
     else
     begin
-        nDmemREN = rqif.MemRead ? 1 : 0;
-        nDmemWEN = rqif.MemWrite ? 1 : 0;
+        nDmemREN = (rqif.MemRead && rqif.ihit) ? 1 : rqif.dmemREN;
+        nDmemWEN = (rqif.MemWrite && rqif.ihit) ? 1 : rqif.dmemWEN;
     end
 
   end
+  //change 0 to old values
 
   always_ff @(posedge CLK, negedge nRST) begin : FFLGC
 

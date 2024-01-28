@@ -28,6 +28,7 @@ module control_unit (
     ctif.Link = 0;
     ctif.LUI = 0;
     ctif.Halt = 0;
+    ctif.JR = 0;
 
     casez(ctif.opcode)
     6'b000000: //R type
@@ -46,6 +47,7 @@ module control_unit (
         6'b001000:
         begin
             ctif.RegWr = 0;
+            ctif.JR = 1;
         end
         6'b?0000?:
         begin
@@ -97,17 +99,20 @@ module control_unit (
     begin
         ctif.Beq = 1;
         ctif.ExtOp = 1;
+        ctif.ALUCtrl = ALU_SUB;
     end
     6'b000101: //Bne
     begin
         ctif.Bne = 1;
         ctif.ExtOp = 1;
+        ctif.ALUCtrl = ALU_SUB;
     end
     6'b00100?: //ADDI and ADDIU
     begin
         ctif.ALUCtrl = ALU_ADD;
         ctif.RegWr = 1;
         ctif.ALUSrc = 1;
+        ctif.ExtOp = 1;
     end
     6'b001010: //SLTI
     begin

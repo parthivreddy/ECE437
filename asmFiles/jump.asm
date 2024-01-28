@@ -18,7 +18,7 @@ ori $5, $0, 0xFF08
 
 
 jal next
-sw  $2, 0($3)
+add  $2, $3, $0
 
 nextnext:
     sw $1, 4($3)

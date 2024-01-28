@@ -10,19 +10,19 @@ interface control_unit_if;
 
   opcode_t opcode;
   funct_t func;
-  logic MemRead, MemWrite, RegDst, ExtOp, ALUSrc,
+  logic MemRead, MemWrite, RegDst, ExtOp, ALUSrc, JR,
   RegWr, MemtoReg, Beq, Bne, Jump, Link, LUI, Halt;
   aluop_t ALUCtrl;
 
   modport ct (
     input opcode, func,
     output MemRead, MemWrite, ALUCtrl, RegDst, ExtOp, ALUSrc,
-    RegWr, MemtoReg, Beq, Bne, Jump, Link, LUI, Halt
+    RegWr, MemtoReg, Beq, Bne, Jump, Link, LUI, Halt, JR
   );
 
   modport tb (
     input MemRead, MemWrite, ALUCtrl, RegDst, ExtOp, ALUSrc,
-    RegWr, MemtoReg, Beq, Bne, Jump, Link, LUI, Halt,
+    RegWr, MemtoReg, Beq, Bne, Jump, Link, LUI, Halt, JR,
     output opcode, func
   );
 endinterface
