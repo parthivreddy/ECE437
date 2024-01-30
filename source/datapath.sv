@@ -31,6 +31,7 @@ module datapath (
   logic [31:0] PC;
   logic [31:0] nPC;
 
+
   //halt flip flop signal
   logic nHalt;
 
@@ -47,13 +48,6 @@ module datapath (
   logic [31:0] imm32;
 
   logic [31:0] pcTemp;
-
-  logic test;
-  logic ntest;
-
-
-
-
   //************************
 
 
@@ -73,33 +67,35 @@ module datapath (
     if(!nRST)
     begin
       PC <= PC_INIT;
-      dpif.halt <= ctif.Halt;
+      //dpif.halt <= ctif.Halt; //maybe assign back to 0 on rst
+      dpif.halt <= 0;
       //test <= 0;
     end
     else
     begin
       PC <= nPC;
       //dpif.halt <= nHalt; //MIGHT BE DIFFERENT 
-      dpif.halt <= nHalt;
+      dpif.halt <= (dpif.halt | ctif.Halt);
+      //dpif.halt <= nHalt;
       //test <= ntest;
     end
   end
 
+  assign pcTemp = PC + 4;
   //if ihit then update nPC
   always_comb begin : PCUPDT
     nPC = PC;
-    pcTemp = 0;
-    if(dpif.ihit && !dpif.halt)
+    if(dpif.ihit)
     begin
       if((ctif.Beq && alif.zero) || (ctif.Bne && !alif.zero))
       begin
-        pcTemp = PC + 4;
-        nPC = (pcTemp) + (imm32 << 2);
+        //nPC = (pcTemp) + (imm32 << 2);
+        nPC = {(pcTemp) + {imm32[29:0], 2'b0}};
       end
       else if(ctif.Jump)
       begin
-        pcTemp = PC + 4;
-        nPC = {pcTemp[31:28], dpif.imemload[25:0], {2{1'b0}}};
+        nPC = {pcTemp[31:28], dpif.imemload[25:0], 2'b0};
+        //nPC = {pcTemp[31:28], dpif.imemload[25:0] << 2};
       end
       else if(ctif.JR)
       begin
@@ -107,7 +103,7 @@ module datapath (
       end
       else
       begin
-        nPC = PC + 4;
+        nPC = pcTemp;
       end
     end
   end
@@ -119,7 +115,7 @@ module datapath (
   assign dpif.imemaddr = PC;
   assign dpif.dmemaddr = alif.ALU_output;
   assign dpif.dmemstore = rfif.rdat2;
-  assign nHalt = ctif.Halt | dpif.halt; //dpif.halt is actual output but flip flopped
+  //assign nHalt = ctif.Halt | dpif.halt; //dpif.halt is actual output but flip flopped
   //assign ntest = ctif.Halt | test;
 
   //Instuction Decoding
