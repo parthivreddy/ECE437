@@ -64,10 +64,10 @@ package cpu_types_pkg;
     XORI    = 6'b001110,
     LUI     = 6'b001111,
     LW      = 6'b100011,
-    LBU     = 6'b100100,
-    LHU     = 6'b100101,
-    SB      = 6'b101000,
-    SH      = 6'b101001,
+    LBU     = 6'b100100, // NOT USED
+    LHU     = 6'b100101, // NOT USED
+    SB      = 6'b101000, // NOT USED
+    SH      = 6'b101001, // NOT USED
     SW      = 6'b101011,
     LL      = 6'b110000,
     SC      = 6'b111000,
