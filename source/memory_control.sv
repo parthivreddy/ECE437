@@ -22,9 +22,6 @@ module memory_control (
   // number of cpus for cc
   parameter CPUS = 1;
 
-
-
-
   always_comb begin : REQUEST
     ccif.iwait = 1;
     ccif.dwait = 0;
