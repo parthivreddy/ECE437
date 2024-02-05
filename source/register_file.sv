@@ -37,16 +37,18 @@ always_comb begin : COMBLGC
     end
 end
 
-always_ff @(negedge CLK, negedge nRST) begin : NXTLGC
+always_ff @(posedge CLK, negedge nRST) begin : NXTLGC
   if(!nRST)
   begin
-    for(i = 0; i < 32; i = i + 1)
-      arrFF[i] <= '0;
+    // for(i = 0; i < 32; i = i + 1)
+    //   arrFF[i] <= '0;
+    arrFF <= '0;
   end
   else
   begin
-    for(i = 0; i < 32; i = i + 1)
-      arrFF[i] <= arr[i];
+    // for(i = 0; i < 32; i = i + 1)
+    //   arrFF[i] <= arr[i];
+    arrFF <= arr;
   end
   
 end

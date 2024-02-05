@@ -18,7 +18,7 @@ module datapath (
   import pipeline_pkg::*;
 
   register_file_if rfif();
-  request_unit_if rqif();
+  //request_unit_if rqif();
   control_unit_if ctif();
   ALU_if alif();
   ALU AL(alif);
@@ -216,8 +216,10 @@ always_comb begin : RQUNT
         rqdmemWEN = 0;
     end
     else
-        rqdmemREN = (stage3.MemRead && dpif.ihit) ? 1 : 0;
-        rqdmemWEN = (stage3.MemWrite && dpif.ihit) ? 1 : 0;
+        // rqdmemREN = (stage3.MemRead && dpif.ihit) ? 1 : 0;
+        // rqdmemWEN = (stage3.MemWrite && dpif.ihit) ? 1 : 0;
+        rqdmemREN = stage3.MemRead;
+        rqdmemWEN = stage3.MemWrite;
 end
 
 //Instruction Decoding
@@ -225,12 +227,13 @@ assign ctif.opcode = opcode_t'(stage1.instruction[31:26]);
 assign ctif.func = funct_t'(stage1.instruction[5:0]);
 assign rs = stage1.instruction[25:21];
 assign rt = stage1.instruction[20:16];
+assign rd = stage1.instruction[15:11];
 assign imm16 = stage1.instruction[15:0];
 
 //Register File Interactions
 assign rfif.rsel1 = rs;
 assign rfif.rsel2 = rt;
-assign rfif.WEN = (ctif.RegWr && (dpif.ihit || dpif.dhit));
+assign rfif.WEN = (stage4.RegWr && (dpif.ihit || dpif.dhit));
 
 //ALU interactions
 assign alif.port_a = stage2.rdat1;
@@ -241,7 +244,7 @@ assign alif.op = aluop_t'(stage2.ALUCtrl);
 assign dpif.dmemaddr = stage3.ALU_output;
 assign dpif.dmemstore = stage3.rdat2;
 assign dpif.imemaddr = PC;  
-assign dpif.dmemREN = dpif.halt ? 0 : rqdmemREN;
+assign dpif.dmemREN = dpif.halt ? 0 : rqdmemREN; //Error on this line
 assign dpif.dmemWEN = dpif.halt ? 0 : rqdmemWEN;
 assign dpif.imemREN = dpif.halt ? 0 : rqimemREN;
 

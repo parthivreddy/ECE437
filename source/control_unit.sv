@@ -31,10 +31,11 @@ module control_unit (
     ctif.JR = 0;
 
     casez(ctif.opcode)
-    6'b000000: //R type
+    RTYPE: //R type
     begin
         ctif.RegWr = 1;
         ctif.RegDst = 1;
+        //ctif.ALUCtrl = 4'b1111;
         casez(ctif.func)
         6'b000100:
         begin
@@ -49,7 +50,7 @@ module control_unit (
             ctif.RegWr = 0;
             ctif.JR = 1;
         end
-        6'b?0000?:
+        6'b10000?:
         begin
             ctif.ALUCtrl = ALU_ADD;
         end
@@ -79,6 +80,12 @@ module control_unit (
         end
         6'b101011:
         begin
+            ctif.ALUCtrl = ALU_SLTU;
+        end
+        default: 
+        begin
+            ctif.RegWr = 0;
+            ctif.RegDst = 0;
             ctif.ALUCtrl = ALU_SLTU;
         end
         endcase
