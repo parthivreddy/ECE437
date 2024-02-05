@@ -27,7 +27,7 @@ module control_unit (
     ctif.Jump = 0;
     ctif.Link = 0;
     ctif.LUI = 0;
-    ctif.Halt = 0;
+    ctif.halt = 0;
     ctif.JR = 0;
 
     casez(ctif.opcode)
@@ -169,7 +169,7 @@ module control_unit (
     end
     6'b111111: //HALT
     begin
-        ctif.Halt = 1;
+        ctif.halt = 1;
     end
     endcase
   end

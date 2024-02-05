@@ -1,4 +1,7 @@
-package pipeline_pkg.vh;
+`ifndef PIPELINE_PKG_VH
+`define PIPELINE_PKG_VH
+
+package pipeline_pkg;
 
 typedef struct packed {
     logic [31:0] PC_plus_four;
@@ -17,7 +20,7 @@ typedef struct packed {
     logic ALUSrc;
     logic[3:0] ALUCtrl;
     logic MemRead, MemWrite, Jump, Beq, Bne, JR;
-    logic MemtoReg, Link, LUI;
+    logic MemtoReg, Link, LUI, RegWr;
 } ID_EX;
 
 typedef struct packed {
@@ -32,7 +35,7 @@ typedef struct packed {
     logic [31:0] ALU_output;
 
     logic MemRead, MemWrite, Jump, Beq, Bne, JR;
-    logic MemtoReg, Link, LUI;
+    logic MemtoReg, Link, LUI, RegWr;
 } EX_MEM;
 
 typedef struct packed {
@@ -41,6 +44,10 @@ typedef struct packed {
     logic [31:0] LUIdat;
     logic [4:0] dest;
     logic [31:0] PC_plus_four;
+    logic [31:0] ALU_output;
 
-    logic MemtoReg, Link, LUI;
+    logic MemtoReg, Link, LUI, RegWr;
 } MEM_WB;
+
+endpackage
+`endif //CPU_TYPES_PKG_VH
