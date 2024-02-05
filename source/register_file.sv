@@ -37,7 +37,7 @@ always_comb begin : COMBLGC
     end
 end
 
-always_ff @(posedge CLK, negedge nRST) begin : NXTLGC
+always_ff @(negedge CLK, negedge nRST) begin : NXTLGC
   if(!nRST)
   begin
     for(i = 0; i < 32; i = i + 1)

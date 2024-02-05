@@ -96,6 +96,7 @@ module datapath (
 
   always_comb begin : STG2
     nstage2 = stage2;
+    //nstage2.dest = stage2.dest;
     if(flush)
     begin
         nstage2 = 0;
@@ -279,10 +280,13 @@ always_ff @(posedge CLK, negedge nRST) begin : PCFF
     end
     else
     begin
-        PC <= stage4.PC_result;
+        PC <= nPC; //stage4.PC_result
         dpif.halt <= (dpif.halt | ctif.halt);
     end
 end
+
+//INcorrect but lets do it anwyay
+assign nPC = dpif.ihit ? PC + 4 : nPC;
 
 
 endmodule

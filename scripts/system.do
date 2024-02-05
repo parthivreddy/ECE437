@@ -2,6 +2,7 @@ onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /system_tb/CLK
 add wave -noupdate /system_tb/nRST
+add wave -noupdate /system_tb/DUT/CPU/DP/prog
 add wave -noupdate -group syif /system_tb/syif/tbCTRL
 add wave -noupdate -group syif /system_tb/syif/halt
 add wave -noupdate -group syif /system_tb/syif/WEN
@@ -136,8 +137,12 @@ add wave -noupdate -group stage4/MEM_WB /system_tb/DUT/CPU/DP/stage4.MemtoReg
 add wave -noupdate -group stage4/MEM_WB /system_tb/DUT/CPU/DP/stage4.Link
 add wave -noupdate -group stage4/MEM_WB /system_tb/DUT/CPU/DP/stage4.LUI
 add wave -noupdate -group stage4/MEM_WB /system_tb/DUT/CPU/DP/stage4.RegWr
+add wave -noupdate /system_tb/DUT/CPU/DP/nstage1
+add wave -noupdate /system_tb/DUT/CPU/DP/nstage2
+add wave -noupdate /system_tb/DUT/CPU/DP/nstage3
+add wave -noupdate /system_tb/DUT/CPU/DP/nstage4
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {804072 ps} 0}
+WaveRestoreCursors {{Cursor 1} {94877 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -153,4 +158,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {748250 ps} {1013250 ps}
+WaveRestoreZoom {0 ps} {265 ns}
