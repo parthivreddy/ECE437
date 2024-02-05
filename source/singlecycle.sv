@@ -26,11 +26,7 @@ parameter PC0 = 0;
   // map datapath
   datapath #(.PC_INIT(PC0)) DP (CLK, nRST, dcif);
   // map caches
-<<<<<<< HEAD
-  caches #(.CPUID(0))       CM (CLK, nRST, dcif, cif0);
-=======
   caches                    CM (CLK, nRST, dcif, cif0);
->>>>>>> c54c166650f4a106c60fd07435109d6e4e177e69
   // map coherence
   memory_control            CC (CLK, nRST, ccif);
 
