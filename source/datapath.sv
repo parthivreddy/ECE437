@@ -51,9 +51,10 @@ module datapath (
   //************************
 
   //Temporary read and write enable signals
-  logic rqimemREN, rqdmemWEN, rqdmemREN;
+  logic rqimemREN, rqdmemWEN, rqdmemREN, ndmemREN, ndmemWEN;
+  logic [31:0] dmemFF;
 
-  assign prog = (dpif.ihit || dpif.dhit);
+  assign prog = (dpif.ihit);
   assign flush = 0;
   assign enable = 1;
 
@@ -72,7 +73,7 @@ module datapath (
         stage3 <= 0;
         stage4 <= 0;
     end
-    else
+    else if(dpif.ihit)
     begin
         stage1 <= nstage1;
         stage2 <= nstage2;
@@ -83,11 +84,12 @@ module datapath (
 
   always_comb begin : STG1
     nstage1 = stage1;
+    // if(flush || (dpif.dhit && ~dpif.ihit))
     if(flush)
     begin
         nstage1 = 0;
     end
-    else if(prog && enable)
+    else if(enable)
     begin
         nstage1.PC_plus_four = PC + 4;
         nstage1.instruction = dpif.imemload;
@@ -95,13 +97,13 @@ module datapath (
   end
 
   always_comb begin : STG2
-    nstage2 = stage2;
+    //nstage2 = stage2;
     //nstage2.dest = stage2.dest;
     if(flush)
     begin
         nstage2 = 0;
     end
-    else if(prog && enable)
+    else if(enable)
     begin
         nstage2.instruction_jump = stage1.instruction[25:0];
         nstage2.PC_plus_four = stage1.PC_plus_four;
@@ -135,6 +137,7 @@ module datapath (
         nstage2.Link = ctif.Link;
         nstage2.LUI = ctif.LUI;
         nstage2.RegWr = ctif.RegWr;
+        nstage2.halt = ctif.halt;
     end
   end
 
@@ -144,7 +147,7 @@ module datapath (
     begin
         nstage3 = 0;
     end
-    else if(prog && enable)
+    else if(enable)
     begin
         nstage3.instruction_jump = stage2.instruction_jump;
         nstage3.PC_plus_four = stage2.PC_plus_four;
@@ -167,6 +170,9 @@ module datapath (
         nstage3.Link = stage2.Link;
         nstage3.LUI = stage2.LUI;
         nstage3.RegWr = stage2.RegWr;
+        nstage3.halt = stage2.halt;
+        // dpif.dmemREN = stage2.MemRead;
+        // dpif.dmemWEN = stage2.MemWrite;
     end
   end
 
@@ -176,7 +182,7 @@ always_comb begin : STG4
     begin
         nstage4 = 0;
     end
-    else if(prog && enable)
+    else if(enable)
     begin
         if((stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
         begin
@@ -194,35 +200,119 @@ always_comb begin : STG4
         begin
             nstage4.PC_result = stage3.PC_plus_four;
         end
-        nstage4.dmemload = dpif.dmemload;
+        nstage4.MemtoReg = stage3.MemtoReg;
+        //nstage4.dmemload = dpif.dmemload; //CHANGE BACK
+        nstage4.dmemload = dmemFF;
         nstage4.LUIdat = stage3.LUIdat;
         nstage4.dest = stage3.dest;
         nstage4.PC_plus_four = stage3.PC_plus_four;
         nstage4.ALU_output = stage3.ALU_output;
+        nstage4.Link = stage3.Link;
+        nstage4.LUI = stage3.LUI;
         nstage4.RegWr = stage3.RegWr;
+        nstage4.halt = stage3.halt;
     end
 end
-
+//one between execute and memory advance on ihit and dhit
 //****************
 //Figure out request unit and halt signals here
 //****************
 
 //Request Unit
-always_comb begin : RQUNT
-    rqimemREN = 1;
-    if(dpif.dhit)
+// always_comb begin : RQLGC
+//     rqimemREN = 1;
+//     if(dpif.dhit)
+//     begin
+//         rqdmemREN = 0;
+//         rqdmemWEN = 0;
+//     end
+//     else
+//     begin
+//         rqdmemREN = stage3.MemRead;
+//         rqdmemWEN = stage3.MemWrite;
+//     end
+// end
+
+// assign rqimemREN = 1;
+// always_ff @(posedge CLK, negedge nRST) begin : RQUNT
+//     if(!nRST)
+//     begin
+//         rqdmemREN <= 0;
+//         rqdmemWEN <= 0;
+//     end
+        
+
+//     else
+//     begin
+//         if(dpif.dhit)
+//         begin
+//             //got_data <= 1;
+//             rqdmemREN <= 0;
+//             rqdmemWEN <= 0;
+//         end
+//         else
+//         begin
+//             // rqdmemREN = (stage3.MemRead && dpif.ihit) ? 1 : 0;
+//             // rqdmemWEN = (stage3.MemWrite && dpif.ihit) ? 1 : 0;
+//             rqdmemREN <= stage3.MemRead ? 1 : 0;
+//             rqdmemWEN <= stage3.MemWrite ? 1 : 0;
+//         end
+//     end
+// end
+
+//assign dmemREN = ~got_data & MemRead
+
+  always_ff @(posedge CLK, negedge nRST) begin : RQFF
+    if(!nRST)
     begin
-        rqdmemREN = 0;
-        rqdmemWEN = 0;
+        dpif.dmemREN <= 0;
+        dpif.dmemWEN <= 0;
     end
-    else
-        // rqdmemREN = (stage3.MemRead && dpif.ihit) ? 1 : 0;
-        // rqdmemWEN = (stage3.MemWrite && dpif.ihit) ? 1 : 0;
-        rqdmemREN = stage3.MemRead;
-        rqdmemWEN = stage3.MemWrite;
+    else if(dpif.dhit)
+    begin
+        dpif.dmemREN <= 0;
+        dpif.dmemWEN <= 0;
+    end
+    else if(dpif.ihit)
+    begin
+        dpif.dmemREN <= dpif.halt ? 0 : stage2.MemRead;
+        dpif.dmemWEN <= dpif.halt ? 0 : stage2.MemWrite;
+    end
+    // else
+    // begin
+    //     dpif.dmemREN <= dpif.dmemREN;
+    //     dpif.dmemWEN <= dpif.dmemWEN;
+    // end
+  end
+
+//   always_comb begin
+//     if (dpif.dhit)
+//     begin
+//         ndmemREN = 0;
+//         ndmemWEN = 0;
+//     end
+//     else
+//     begin
+//         ndmemREN = stage3.MemRead;
+//         ndmemWEN = stage3.MemWrite;
+//     end
+//   end
+
+always_ff @(posedge CLK, negedge nRST) begin : MEMLD
+    if(!nRST)
+    begin
+        dmemFF <= 0;
+    end
+    else if(dpif.dhit)
+    begin
+        dmemFF <= dpif.dmemload;
+    end
+    
 end
 
-//Instruction Decoding
+  assign dpif.imemREN = dpif.halt ? 0 : 1;
+
+//Instruction Decoding  assign prog = (dpif.ihit || dpif.dhit);
 assign ctif.opcode = opcode_t'(stage1.instruction[31:26]);
 assign ctif.func = funct_t'(stage1.instruction[5:0]);
 assign rs = stage1.instruction[25:21];
@@ -233,7 +323,7 @@ assign imm16 = stage1.instruction[15:0];
 //Register File Interactions
 assign rfif.rsel1 = rs;
 assign rfif.rsel2 = rt;
-assign rfif.WEN = (stage4.RegWr && (dpif.ihit || dpif.dhit));
+assign rfif.WEN = (stage4.RegWr);
 
 //ALU interactions
 assign alif.port_a = stage2.rdat1;
@@ -244,9 +334,17 @@ assign alif.op = aluop_t'(stage2.ALUCtrl);
 assign dpif.dmemaddr = stage3.ALU_output;
 assign dpif.dmemstore = stage3.rdat2;
 assign dpif.imemaddr = PC;  
-assign dpif.dmemREN = dpif.halt ? 0 : rqdmemREN; //Error on this line
-assign dpif.dmemWEN = dpif.halt ? 0 : rqdmemWEN;
-assign dpif.imemREN = dpif.halt ? 0 : rqimemREN;
+// assign dpif.dmemREN = dpif.halt ? 0 : (dpif.dhit ? 0 : stage3.MemRead); //Error on this line
+// assign dpif.dmemWEN = dpif.halt ? 0 : (dpif.dhit ? 0 : stage3.MemWrite);
+// assign dpif.imemREN = dpif.halt ? 0 : 1;
+
+// assign dpif.dmemREN = dpif.halt ? 0 : rqdmemREN; //Error on this line
+// assign dpif.dmemWEN = dpif.halt ? 0 : rqdmemWEN;
+// assign dpif.imemREN = dpif.halt ? 0 : rqimemREN;
+
+// assign dpif.dmemREN = dpif.halt ? 0 : stage3.MemRead //Error on this line
+// assign dpif.dmemWEN = dpif.halt ? 0 : stage3.MemWrite;
+// assign dpif.imemREN = dpif.halt ? 0 : 1;
 
 //Cont
 
@@ -281,10 +379,14 @@ always_ff @(posedge CLK, negedge nRST) begin : PCFF
         PC <= PC_INIT;
         dpif.halt <= 0;
     end
-    else
+    else if(dpif.ihit)
     begin
         PC <= nPC; //stage4.PC_result
-        dpif.halt <= (dpif.halt | ctif.halt);
+        dpif.halt <= (dpif.halt | stage4.halt);
+    end
+    else
+    begin
+        dpif.halt <= (dpif.halt | stage4.halt);
     end
 end
 

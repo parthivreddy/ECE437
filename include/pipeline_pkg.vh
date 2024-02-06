@@ -20,7 +20,7 @@ typedef struct packed {
     logic ALUSrc;
     logic[3:0] ALUCtrl;
     logic MemRead, MemWrite, Jump, Beq, Bne, JR;
-    logic MemtoReg, Link, LUI, RegWr;
+    logic MemtoReg, Link, LUI, RegWr, halt;
 } ID_EX;
 
 typedef struct packed {
@@ -35,7 +35,7 @@ typedef struct packed {
     logic [31:0] ALU_output;
 
     logic MemRead, MemWrite, Jump, Beq, Bne, JR;
-    logic MemtoReg, Link, LUI, RegWr;
+    logic MemtoReg, Link, LUI, RegWr, halt;
 } EX_MEM;
 
 typedef struct packed {
@@ -46,7 +46,7 @@ typedef struct packed {
     logic [31:0] PC_plus_four;
     logic [31:0] ALU_output;
 
-    logic MemtoReg, Link, LUI, RegWr;
+    logic MemtoReg, Link, LUI, RegWr, halt;
 } MEM_WB;
 
 endpackage

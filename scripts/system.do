@@ -1,5 +1,6 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
+add wave -noupdate /system_tb/DUT/CPUCLK
 add wave -noupdate /system_tb/CLK
 add wave -noupdate /system_tb/nRST
 add wave -noupdate /system_tb/DUT/CPU/DP/prog
@@ -37,6 +38,7 @@ add wave -noupdate -group DataPath /system_tb/DUT/CPU/DP/dpif/halt
 add wave -noupdate -group DataPath /system_tb/DUT/CPU/DP/dpif/ihit
 add wave -noupdate -group DataPath /system_tb/DUT/CPU/DP/dpif/imemREN
 add wave -noupdate -group DataPath /system_tb/DUT/CPU/DP/dpif/imemload
+add wave -noupdate -group DataPath /system_tb/DUT/CPU/DP/nPC
 add wave -noupdate -group DataPath /system_tb/DUT/CPU/DP/dpif/imemaddr
 add wave -noupdate -group DataPath /system_tb/DUT/CPU/DP/dpif/dhit
 add wave -noupdate -group DataPath /system_tb/DUT/CPU/DP/dpif/datomic
@@ -54,14 +56,7 @@ add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/rfif/wdat
 add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/rfif/rdat1
 add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/rfif/rdat2
 add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/RF/arrFF
-add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/RF/arr
-add wave -noupdate -group RequestUnit /system_tb/DUT/CPU/DP/rqif/ihit
-add wave -noupdate -group RequestUnit /system_tb/DUT/CPU/DP/rqif/dhit
-add wave -noupdate -group RequestUnit /system_tb/DUT/CPU/DP/rqif/MemRead
-add wave -noupdate -group RequestUnit /system_tb/DUT/CPU/DP/rqif/MemWrite
-add wave -noupdate -group RequestUnit /system_tb/DUT/CPU/DP/rqif/imemREN
-add wave -noupdate -group RequestUnit /system_tb/DUT/CPU/DP/rqif/dmemREN
-add wave -noupdate -group RequestUnit /system_tb/DUT/CPU/DP/rqif/dmemWEN
+add wave -noupdate -group RegFile -expand /system_tb/DUT/CPU/DP/RF/arr
 add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/iwait
 add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/dwait
 add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/iREN
@@ -142,7 +137,7 @@ add wave -noupdate /system_tb/DUT/CPU/DP/nstage2
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage3
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage4
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {94877 ps} 0}
+WaveRestoreCursors {{Cursor 1} {366910 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -158,4 +153,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {265 ns}
+WaveRestoreZoom {238500 ps} {503500 ps}
