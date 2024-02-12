@@ -21,8 +21,8 @@ module hazard_unit (
         //  (ID/EX.RegisterRt = IF/ID.RegisterRt)))
         //  stall the pipeline
         if ((huif.stage2_MemRead) && 
-            ((huif.stage2_rt = huif.stage1_rs) ||
-            (huif.stage2_rt = huif.stage1_rt))) begin
+            ((huif.stage2_rt == huif.stage1_rs) ||
+            (huif.stage2_rt == huif.stage1_rt))) begin
 
             huif.stall = 1;
 
