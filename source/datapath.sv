@@ -3,6 +3,7 @@
 `include "request_unit_if.vh"
 `include "control_unit_if.vh"
 `include "ALU_if.vh"
+`include "hazard_unit_if.vh"
 
 // alu op, mips op, and instruction type
 `include "cpu_types_pkg.vh"
@@ -24,6 +25,8 @@ module datapath (
   ALU AL(alif);
   register_file RF(CLK, nRST, rfif);
   control_unit CT(CLK, nRST, ctif);
+  hazard_unit_if huif();
+  hazard_unit HU(huif);
 
   // pc init
   parameter PC_INIT = 0;
@@ -63,7 +66,13 @@ module datapath (
   EX_MEM stage3, nstage3;
   MEM_WB stage4, nstage4;
 
-
+  assign huif.jump = ctif.Jump;
+  assign huif.branch = (stage2.Beq && alif.zero) || (stage2.Bne && !alif.zero);
+  assign huif.stage1_rs = rs;
+  assign huif.stage1_rt = rt;
+  assign huif.stage2_rt = stage2.rt;
+  assign huif.stage2_MemRead = stage2.MemRead;
+  
 
   always_ff @(posedge CLK, negedge nRST) begin : PIPES
     if(!nRST)
@@ -85,7 +94,7 @@ module datapath (
   always_comb begin : STG1
     nstage1 = stage1;
     // if(flush || (dpif.dhit && ~dpif.ihit))
-    if(flush)
+    if(huif.flush1)
     begin
         nstage1 = 0;
     end
@@ -99,7 +108,7 @@ module datapath (
   always_comb begin : STG2
     //nstage2 = stage2;
     //nstage2.dest = stage2.dest;
-    if(flush)
+    if(huif.set2)
     begin
         nstage2 = 0;
     end
@@ -111,6 +120,9 @@ module datapath (
         nstage2.rdat2 = rfif.rdat2;
         nstage2.immExtension = ctif.ExtOp ? {{16{imm16[15]}}, imm16} : {{16{1'b0}}, imm16};
         nstage2.LUIdat = {imm16, 16'b0};
+        nstage2.rs = rs;
+        nstage2.rt = rt;
+        nstage2.rd = rd;
         if(ctif.Link)
         begin
             nstage2.dest = 31;
@@ -158,6 +170,9 @@ module datapath (
         nstage3.branchPC =  {stage2.PC_plus_four + {stage2.immExtension[29:0], 2'b0}};
         nstage3.zero = alif.zero;
         nstage3.ALU_output = alif.ALU_output;
+        nstage3.rs = stage2.rs;
+        nstage3.rt = stage2.rt;
+        nstage3.rd = stage3.rd;
 
         //Control Signals Pass
         nstage3.MemRead = stage2.MemRead;
@@ -171,8 +186,11 @@ module datapath (
         nstage3.LUI = stage2.LUI;
         nstage3.RegWr = stage2.RegWr;
         nstage3.halt = stage2.halt;
-        // dpif.dmemREN = stage2.MemRead;
-        // dpif.dmemWEN = stage2.MemWrite;
+
+        //maybe halt stage 3 hecking flushes from hazard
+
+        //dpif.dmemREN = stage2.MemRead;
+        //dpif.dmemWEN = stage2.MemWrite;
     end
   end
 
@@ -184,29 +202,18 @@ always_comb begin : STG4
     end
     else if(enable)
     begin
-        if((stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
-        begin
-            nstage4.PC_result = stage3.branchPC;
-        end
-        else if(stage3.Jump)
-        begin
-            nstage4.PC_result = {stage3.PC_plus_four[31:28], stage3.instruction_jump, 2'b0};
-        end
-        else if(stage3.JR)
-        begin
-            nstage4.PC_result = stage3.rdat1;
-        end
-        else
-        begin
-            nstage4.PC_result = stage3.PC_plus_four;
-        end
-        nstage4.MemtoReg = stage3.MemtoReg;
         //nstage4.dmemload = dpif.dmemload; //CHANGE BACK
         nstage4.dmemload = dmemFF;
         nstage4.LUIdat = stage3.LUIdat;
         nstage4.dest = stage3.dest;
         nstage4.PC_plus_four = stage3.PC_plus_four;
         nstage4.ALU_output = stage3.ALU_output;
+        nstage4.rs = stage3.rs;
+        nstage4.rt = stage3.rt;
+        nstage4.rd = stage3.rd;
+
+        //Control Signals
+        nstage4.MemtoReg = stage3.MemtoReg;
         nstage4.Link = stage3.Link;
         nstage4.LUI = stage3.LUI;
         nstage4.RegWr = stage3.RegWr;
@@ -214,89 +221,6 @@ always_comb begin : STG4
     end
 end
 //one between execute and memory advance on ihit and dhit
-//****************
-//Figure out request unit and halt signals here
-//****************
-
-//Request Unit
-// always_comb begin : RQLGC
-//     rqimemREN = 1;
-//     if(dpif.dhit)
-//     begin
-//         rqdmemREN = 0;
-//         rqdmemWEN = 0;
-//     end
-//     else
-//     begin
-//         rqdmemREN = stage3.MemRead;
-//         rqdmemWEN = stage3.MemWrite;
-//     end
-// end
-
-// assign rqimemREN = 1;
-// always_ff @(posedge CLK, negedge nRST) begin : RQUNT
-//     if(!nRST)
-//     begin
-//         rqdmemREN <= 0;
-//         rqdmemWEN <= 0;
-//     end
-        
-
-//     else
-//     begin
-//         if(dpif.dhit)
-//         begin
-//             //got_data <= 1;
-//             rqdmemREN <= 0;
-//             rqdmemWEN <= 0;
-//         end
-//         else
-//         begin
-//             // rqdmemREN = (stage3.MemRead && dpif.ihit) ? 1 : 0;
-//             // rqdmemWEN = (stage3.MemWrite && dpif.ihit) ? 1 : 0;
-//             rqdmemREN <= stage3.MemRead ? 1 : 0;
-//             rqdmemWEN <= stage3.MemWrite ? 1 : 0;
-//         end
-//     end
-// end
-
-//assign dmemREN = ~got_data & MemRead
-
-  always_ff @(posedge CLK, negedge nRST) begin : RQFF
-    if(!nRST)
-    begin
-        dpif.dmemREN <= 0;
-        dpif.dmemWEN <= 0;
-    end
-    else if(dpif.dhit)
-    begin
-        dpif.dmemREN <= 0;
-        dpif.dmemWEN <= 0;
-    end
-    else if(dpif.ihit)
-    begin
-        dpif.dmemREN <= dpif.halt ? 0 : stage2.MemRead;
-        dpif.dmemWEN <= dpif.halt ? 0 : stage2.MemWrite;
-    end
-    // else
-    // begin
-    //     dpif.dmemREN <= dpif.dmemREN;
-    //     dpif.dmemWEN <= dpif.dmemWEN;
-    // end
-  end
-
-//   always_comb begin
-//     if (dpif.dhit)
-//     begin
-//         ndmemREN = 0;
-//         ndmemWEN = 0;
-//     end
-//     else
-//     begin
-//         ndmemREN = stage3.MemRead;
-//         ndmemWEN = stage3.MemWrite;
-//     end
-//   end
 
 always_ff @(posedge CLK, negedge nRST) begin : MEMLD
     if(!nRST)
@@ -310,7 +234,26 @@ always_ff @(posedge CLK, negedge nRST) begin : MEMLD
     
 end
 
-  assign dpif.imemREN = dpif.halt ? 0 : 1;
+always_ff @(posedge CLK, negedge nRST) begin : RQFF
+    if(!nRST)
+    begin
+        dpif.dmemREN <= 0;
+        dpif.dmemWEN <= 0;
+    end
+    else if(dpif.dhit)
+    begin
+        dpif.dmemREN <= 0;
+        dpif.dmemWEN <= 0;
+    end
+    else
+    begin
+      // dpif.dmemREN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemRead);
+      // dpif.dmemWEN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemWrite);
+        dpif.dmemREN <= dpif.halt ? 0 : stage2.MemRead;
+        dpif.dmemWEN <= dpif.halt ? 0 : stage2.MemWrite;
+    end
+end
+assign dpif.imemREN = dpif.halt ? 0 : 1;
 
 //Instruction Decoding  assign prog = (dpif.ihit || dpif.dhit);
 assign ctif.opcode = opcode_t'(stage1.instruction[31:26]);
@@ -334,19 +277,7 @@ assign alif.op = aluop_t'(stage2.ALUCtrl);
 assign dpif.dmemaddr = stage3.ALU_output;
 assign dpif.dmemstore = stage3.rdat2;
 assign dpif.imemaddr = PC;  
-// assign dpif.dmemREN = dpif.halt ? 0 : (dpif.dhit ? 0 : stage3.MemRead); //Error on this line
-// assign dpif.dmemWEN = dpif.halt ? 0 : (dpif.dhit ? 0 : stage3.MemWrite);
-// assign dpif.imemREN = dpif.halt ? 0 : 1;
 
-// assign dpif.dmemREN = dpif.halt ? 0 : rqdmemREN; //Error on this line
-// assign dpif.dmemWEN = dpif.halt ? 0 : rqdmemWEN;
-// assign dpif.imemREN = dpif.halt ? 0 : rqimemREN;
-
-// assign dpif.dmemREN = dpif.halt ? 0 : stage3.MemRead //Error on this line
-// assign dpif.dmemWEN = dpif.halt ? 0 : stage3.MemWrite;
-// assign dpif.imemREN = dpif.halt ? 0 : 1;
-
-//Cont
 
 always_comb begin : RGFILE
     rfif.wdat = 0;
@@ -379,7 +310,7 @@ always_ff @(posedge CLK, negedge nRST) begin : PCFF
         PC <= PC_INIT;
         dpif.halt <= 0;
     end
-    else if(dpif.ihit)
+    else if(dpif.ihit && !huif.stall)
     begin
         PC <= nPC; //stage4.PC_result
         dpif.halt <= (dpif.halt | stage4.halt);
@@ -391,7 +322,27 @@ always_ff @(posedge CLK, negedge nRST) begin : PCFF
 end
 
 //INcorrect but lets do it anwyay
-assign nPC = dpif.ihit ? PC + 4 : nPC;
 
-
+always_comb begin : PCUPDT
+    nPC = PC;
+    if(dpif.ihit && !huif.stall)
+    begin
+        if((stage2.Beq && alif.zero) || (stage2.Bne && !alif.zero))
+        begin
+            nPC = {stage2.PC_plus_four + {stage2.immExtension[29:0], 2'b0}};
+        end
+        else if(ctif.Jump)
+        begin
+            nPC = {stage1.PC_plus_four[31:28], stage1.instruction[25:0], 2'b0};
+        end
+        else if(ctif.JR) //Add stuff for this in forwarding unit
+        begin
+            nPC = rfif.rdat1;
+        end
+        else
+        begin
+            nPC = PC + 4;
+        end
+    end
+end
 endmodule

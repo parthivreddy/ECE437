@@ -16,6 +16,7 @@ typedef struct packed {
     logic [31:0] immExtension;
     logic [31:0] LUIdat;
     logic [4:0] dest;
+    logic [4:0] rs, rt, rd;
 
     logic ALUSrc;
     logic[3:0] ALUCtrl;
@@ -33,18 +34,19 @@ typedef struct packed {
     logic [31:0] branchPC;
     logic zero;
     logic [31:0] ALU_output;
+    logic [4:0] rs, rt, rd;
 
     logic MemRead, MemWrite, Jump, Beq, Bne, JR;
     logic MemtoReg, Link, LUI, RegWr, halt;
 } EX_MEM;
 
 typedef struct packed {
-    logic [31:0] PC_result;
     logic [31:0] dmemload;
     logic [31:0] LUIdat;
     logic [4:0] dest;
     logic [31:0] PC_plus_four;
     logic [31:0] ALU_output;
+    logic [4:0] rs, rt, rd;
 
     logic MemtoReg, Link, LUI, RegWr, halt;
 } MEM_WB;

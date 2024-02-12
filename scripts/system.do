@@ -56,7 +56,7 @@ add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/rfif/wdat
 add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/rfif/rdat1
 add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/rfif/rdat2
 add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/RF/arrFF
-add wave -noupdate -group RegFile -expand /system_tb/DUT/CPU/DP/RF/arr
+add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/RF/arr
 add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/iwait
 add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/dwait
 add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/iREN
@@ -122,7 +122,6 @@ add wave -noupdate -group stage3/EX_MEM /system_tb/DUT/CPU/DP/stage3.MemtoReg
 add wave -noupdate -group stage3/EX_MEM /system_tb/DUT/CPU/DP/stage3.Link
 add wave -noupdate -group stage3/EX_MEM /system_tb/DUT/CPU/DP/stage3.LUI
 add wave -noupdate -group stage3/EX_MEM /system_tb/DUT/CPU/DP/stage3.RegWr
-add wave -noupdate -group stage4/MEM_WB /system_tb/DUT/CPU/DP/stage4.PC_result
 add wave -noupdate -group stage4/MEM_WB /system_tb/DUT/CPU/DP/stage4.dmemload
 add wave -noupdate -group stage4/MEM_WB /system_tb/DUT/CPU/DP/stage4.LUIdat
 add wave -noupdate -group stage4/MEM_WB /system_tb/DUT/CPU/DP/stage4.dest
@@ -136,6 +135,16 @@ add wave -noupdate /system_tb/DUT/CPU/DP/nstage1
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage2
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage3
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage4
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/jump
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/branch
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/flush1
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/set2
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stall
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_MemRead
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/npc_sel
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rs
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rt
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_rt
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {366910 ps} 0}
 quietly wave cursor active 1
