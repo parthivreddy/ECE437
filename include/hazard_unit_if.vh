@@ -11,19 +11,19 @@ interface hazard_unit_if;
   // import types
   import cpu_types_pkg::*;
 
-  logic     WEN;
-  regbits_t wsel, rsel1, rsel2;
-  word_t    wdat, rdat1, rdat2;
+  logic         jump, branch, flush1, set2, stall, stage2_MemRead;
+  logic [1:0]   npc_sel;
+  regbits_t     stage1_rs, stage1_rt, stage2_rt;
 
   // register file ports
   modport hu (
-    input   WEN, wsel, rsel1, rsel2, wdat,
-    output  rdat1, rdat2
+    input   jump, branch, stage1_rs, stage1_rt, stage2_rt, stage2_MemRead,
+    output  flush1, set2, stall, npc_sel
   );
   // register file tb
   modport tb (
-    input   rdat1, rdat2,
-    output  WEN, wsel, rsel1, rsel2, wdat
+    input   flush1, set2, stall, npc_sel,
+    output  jump, branch, stage1_rs, stage1_rt, stage2_rt, stage2_MemRead
   );
 endinterface
 
