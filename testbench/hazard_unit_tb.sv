@@ -163,37 +163,49 @@ initial begin
   tb_test_case = "detect load hazard";
   tb_test_case_num += 1;
   
-  cuif.opcode = RTYPE;
-  cuif.funct = ADD;
-  expected_ALUop = ALU_ADD;
-  expected_reg_dest = 1;
-  expected_reg_write = 1;
+  huif.stage2_MemRead = 1;
+  huif.stage1_rs = 10;
+  huif.stage2_rt = 10;
+  expected_stall = 1;
+  @(posedge CLK);
+  check_outputs(tb_test_case);
+
+  huif.stage1_rs = 0;
+  huif.stage1_rt = 10;
+  @(posedge CLK);
+  check_outputs(tb_test_case);
+
+  huif.stage2_MemRead = 0;
+  expected_stall = 0;
   @(posedge CLK);
   check_outputs(tb_test_case);
   #(10);
-
-  // Test 2: Branch Hazard
+  
+  // Test 2: Branch cuif.opcode;
   tb_test_case = "branch taken";
   tb_test_case_num += 1;
   
-  cuif.opcode = RTYPE;
-  cuif.funct = ADDU;
-  expected_ALUop = ALU_ADD;
-  expected_reg_dest = 1;
-  expected_reg_write = 1;
+  reset_inputs();
+  reset_expected();
+  @(posedge CLK);
+  huif.branch = 1;
+  expected_flush1 = 1;
+  expected_set2 = 1;
+  expected_npc_sel = 2;
   @(posedge CLK);
   check_outputs(tb_test_case);
   #(10);
 
   // Test 3: Jump Hazard
-  tb_test_case = "R-type SLLV";
+  tb_test_case = "jump";
   tb_test_case_num += 1;
   
-  cuif.opcode = RTYPE;
-  cuif.funct = SLLV;
-  expected_ALUop = ALU_SLL;
-  expected_reg_dest = 1;
-  expected_reg_write = 1;
+  reset_inputs();
+  reset_expected();
+  @(posedge CLK);
+  huif.jump = 1;
+  expected_flush1 = 1;
+  expected_npc_sel = 1;
   @(posedge CLK);
   check_outputs(tb_test_case);
   #(10);
