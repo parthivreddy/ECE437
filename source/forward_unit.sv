@@ -14,28 +14,23 @@ import cpu_types_pkg::*;
 
             if(fuif.stage3_rd == fuif.stage2_rs)
             begin
-                fif.forwardA = 2'b10;
+                fuif.forwardA = 2'b10;
             end
-            if(fuif.stage3_rd == stage2_rt)
+            if(fuif.stage3_rd == fuif.stage2_rt)
             begin
                 fuif.forwardB = 2'b10;
             end
         end
         if(fuif.stage4_RegWr && fuif.stage4_rd != 0)
         begin
-            if(!(fuif.stage3_RegWr && (fuif.stage3_rd != 0) && (fuif.stage3_rd != fuif.stage2_rs)))
+            if(fuif.stage4_rd == fuif.stage2_rs)
             begin
-                if(fuif.stage4_rd == fuif.stage2_rs)
-                begin
-                    fuif.forwardA = 2'b01;
-                end
+                fuif.forwardA = 2'b01;
             end
-            if(!(fuif.stage3_RegWr && (fuif.stage3_rd != 0) && (fuif.stage3_rd != fuif.stage2_rt)))
+
+            if(fuif.stage4_rd == fuif.stage2_rt)
             begin
-                if(fuif.stage4_rd == fuif.stage2_rt)
-                begin
-                    fuif.forwardB = 2'b01;
-                end
+                fuif.forwardB = 2'b01;
             end
         end
     end

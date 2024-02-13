@@ -47,6 +47,7 @@ typedef struct packed {
     logic [31:0] PC_plus_four;
     logic [31:0] ALU_output;
     logic [4:0] rs, rt, rd;
+    logic [4:0] rdat2;
 
     logic MemtoReg, Link, LUI, RegWr, halt;
 } MEM_WB;
