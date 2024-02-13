@@ -113,7 +113,7 @@ module datapath (
     begin
         nstage1 = 0;
     end
-    else if(enable)
+    else if(enable && !huif.stall)
     begin
         nstage1.PC_plus_four = PC + 4;
         nstage1.instruction = dpif.imemload;
@@ -121,9 +121,9 @@ module datapath (
   end
 
   always_comb begin : STG2
-    //nstage2 = stage2;
+    nstage2 = stage2;
     //nstage2.dest = stage2.dest;
-    if(huif.set2)
+    if(huif.set2 || huif.stall)
     begin
         nstage2 = 0;
     end
