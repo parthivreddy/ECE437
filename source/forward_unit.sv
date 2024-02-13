@@ -21,7 +21,7 @@ import cpu_types_pkg::*;
                 fuif.forwardB = 2'b10;
             end
         end
-        if(fuif.stage4_RegWr && fuif.stage4_rd != 0)
+        else if(fuif.stage4_RegWr && fuif.stage4_rd != 0)
         begin
             if(fuif.stage4_rd == fuif.stage2_rs)
             begin
