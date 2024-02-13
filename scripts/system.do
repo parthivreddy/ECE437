@@ -145,6 +145,14 @@ add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/npc_sel
 add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rs
 add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rt
 add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_rt
+add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage2_rs
+add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage2_rt
+add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage3_rd
+add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage4_rd
+add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage3_RegWr
+add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage4_RegWr
+add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardA
+add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardB
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {366910 ps} 0}
 quietly wave cursor active 1
@@ -162,4 +170,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {238500 ps} {503500 ps}
+WaveRestoreZoom {748250 ps} {1013250 ps}

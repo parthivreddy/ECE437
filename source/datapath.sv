@@ -4,6 +4,7 @@
 `include "control_unit_if.vh"
 `include "ALU_if.vh"
 `include "hazard_unit_if.vh"
+`include "forward_unit_if.vh"
 
 // alu op, mips op, and instruction type
 `include "cpu_types_pkg.vh"
@@ -27,6 +28,8 @@ module datapath (
   control_unit CT(CLK, nRST, ctif);
   hazard_unit_if huif();
   hazard_unit HU(huif);
+  forward_unit_if fuif();
+  forward_unit FU(fuif);
 
   // pc init
   parameter PC_INIT = 0;
@@ -53,6 +56,8 @@ module datapath (
   logic [31:0] pcTemp;
   //************************
 
+  logic [31:0] nstore, naddr;
+
   //Temporary read and write enable signals
   logic rqimemREN, rqdmemWEN, rqdmemREN, ndmemREN, ndmemWEN;
   logic [31:0] dmemFF;
@@ -66,12 +71,22 @@ module datapath (
   EX_MEM stage3, nstage3;
   MEM_WB stage4, nstage4;
 
+
+  //Hazard Unit inputs
   assign huif.jump = ctif.Jump;
   assign huif.branch = (stage2.Beq && alif.zero) || (stage2.Bne && !alif.zero);
   assign huif.stage1_rs = rs;
   assign huif.stage1_rt = rt;
   assign huif.stage2_rt = stage2.rt;
   assign huif.stage2_MemRead = stage2.MemRead;
+
+  //Forward Unit inputs
+  assign fuif.stage2_rs = stage2.rs;
+  assign fuif.stage2_rt = stage2.rt;
+  assign fuif.stage3_rd = stage3.dest;
+  assign fuif.stage4_rd = stage4.dest;
+  assign fuif.stage3_RegWr = stage3.RegWr;
+  assign fuif.stage4_RegWr = stage4.RegWr;
   
 
   always_ff @(posedge CLK, negedge nRST) begin : PIPES
@@ -172,7 +187,7 @@ module datapath (
         nstage3.ALU_output = alif.ALU_output;
         nstage3.rs = stage2.rs;
         nstage3.rt = stage2.rt;
-        nstage3.rd = stage3.rd;
+        nstage3.rd = stage2.rd;
 
         //Control Signals Pass
         nstage3.MemRead = stage2.MemRead;
@@ -211,6 +226,7 @@ always_comb begin : STG4
         nstage4.rs = stage3.rs;
         nstage4.rt = stage3.rt;
         nstage4.rd = stage3.rd;
+        nstage4.rdat2 = stage3.rdat2;
 
         //Control Signals
         nstage4.MemtoReg = stage3.MemtoReg;
@@ -269,15 +285,121 @@ assign rfif.rsel2 = rt;
 assign rfif.WEN = (stage4.RegWr);
 
 //ALU interactions
-assign alif.port_a = stage2.rdat1;
-assign alif.port_b = stage2.ALUSrc ? stage2.immExtension : stage2.rdat2;
+always_comb begin : ALUINTS
+  if(fuif.forwardA == 2'b10)
+  begin
+    if(stage3.LUI)
+    begin
+      alif.port_a = stage3.LUIdat;
+    end
+    else if(stage3.Link)
+    begin
+      alif.port_a = stage3.PC_plus_four;
+    end
+    else
+    begin
+      alif.port_a = stage3.ALU_output;
+    end
+  end
+  else if(fuif.forwardA == 2'b01)
+  begin
+    if(stage4.LUI)
+    begin
+      alif.port_a = stage4.LUIdat;
+    end
+    else if(stage4.Link)
+    begin
+      alif.port_a = stage4.PC_plus_four;
+    end
+    else if(stage4.MemtoReg)
+    begin
+      alif.port_a = stage4.dmemload;
+    end
+    else
+    begin
+      alif.port_a = stage4.ALU_output;
+    end
+    //alif.port_a = stage4.LUI ? stage4.LUIdat : (stage4.Link ? stage4.PC_plus_four : (stage4.MemtoReg ? stage4.dmemload : stage4.ALU_output));
+    
+    //stage4.MemtoReg ? stage4.dmemload : stage4.ALU_output;
+  end
+  else
+  begin
+    alif.port_a = stage2.rdat1;
+  end
+  if(fuif.forwardB == 2'b10)
+  begin
+    //alif.port_b = stage2.ALUSrc ? stage2.immExtension : (stage4.MemtoReg ? stage4.dmemload : stage4.ALU_output);
+    if(stage2.ALUSrc)
+    begin
+      alif.port_b = stage2.immExtension;
+    end
+    else if(stage3.LUI)
+    begin
+      alif.port_b = stage3.LUIdat;
+    end
+    else if(stage3.Link)
+    begin
+      alif.port_b = stage3.PC_plus_four;
+    end
+    else
+    begin
+      alif.port_b = stage3.ALU_output;
+    //alif.port_b = stage2.ALUSrc ? stage2.immExtension : stage3.ALU_output;
+    end
+  end
+  else if(fuif.forwardB == 2'b01)
+  begin
+    if(stage2.ALUSrc)
+    begin
+      alif.port_b = stage2.immExtension;
+    end
+    else if(stage4.LUI)
+    begin
+      alif.port_b = stage4.LUIdat;
+    end
+    else if(stage4.Link)
+    begin
+      alif.port_b = stage4.PC_plus_four;
+    end
+    else if(stage4.MemtoReg)
+    begin
+      alif.port_b = stage4.dmemload;
+    end
+    else
+    begin
+      alif.port_b = stage4.ALU_output;
+    end
+  end
+  else
+  begin
+    alif.port_b = stage2.ALUSrc ? stage2.immExtension : stage2.rdat2;
+  end
+end
+// assign alif.port_a = stage2.rdat1;
+// assign alif.port_b = stage2.ALUSrc ? stage2.immExtension : stage2.rdat2;
 assign alif.op = aluop_t'(stage2.ALUCtrl);
 
 //outputs to ram
 assign dpif.dmemaddr = stage3.ALU_output;
-assign dpif.dmemstore = stage3.rdat2;
+//assign dpif.dmemstore = (fuif.forwardB == 2'b01) ? stage4.rdat2 : stage3.rdat2;
+assign dpif.dmemstore = (fuif.forwardA != 0 || fuif.forwardB != 0) ? stage3.ALU_output : stage3.rdat2;
+
 assign dpif.imemaddr = PC;  
 
+// always_ff @(posedge CLK, negedge nRST) begin : STORELGC
+
+//   if(!nRST)
+//   begin
+//     dpif.dmemstore <= 0;
+//     //dpif.dmemaddr <= 0;
+//   end
+//   else
+//   begin
+//     dpif.dmemstore <= nstore;
+//     //dpif.dmemaddr <= naddr;
+//   end
+// end
 
 always_comb begin : RGFILE
     rfif.wdat = 0;

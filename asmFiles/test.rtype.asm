@@ -8,7 +8,7 @@
   ori   $2,$zero,0x37F1
 
   ori   $21,$zero,0xFF00
-  ori   $22,$zero,0xFC00
+  ori   $22,$zero,0xFC00 #hazard1
 
 # Now running all R type instructions
   or    $3,$1,$2
@@ -25,7 +25,7 @@
   srlv  $12,$14,$1
   nor   $13,$1,$2
 # Store them to verify the results
-  sw    $13,0($22)
+  sw    $13,0($22) #hazard1
   sw    $3,0($21)
   sw    $4,4($21)
   sw    $5,8($21)
