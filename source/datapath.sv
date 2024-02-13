@@ -179,7 +179,7 @@ module datapath (
         nstage3.instruction_jump = stage2.instruction_jump;
         nstage3.PC_plus_four = stage2.PC_plus_four;
         nstage3.rdat1 = stage2.rdat1;
-        nstage3.rdat2 = stage2.rdat2;
+        nstage3.rdat2 = (fuif.forwardA != 0 || fuif.forwardB != 0) ? (stage3.ALU_output) : stage2.rdat2;
         nstage3.LUIdat = stage2.LUIdat;
         nstage3.dest = stage2.dest;
         nstage3.branchPC =  {stage2.PC_plus_four + {stage2.immExtension[29:0], 2'b0}};
@@ -383,7 +383,8 @@ assign alif.op = aluop_t'(stage2.ALUCtrl);
 //outputs to ram
 assign dpif.dmemaddr = stage3.ALU_output;
 //assign dpif.dmemstore = (fuif.forwardB == 2'b01) ? stage4.rdat2 : stage3.rdat2;
-assign dpif.dmemstore = (fuif.forwardA != 0 || fuif.forwardB != 0) ? stage3.ALU_output : stage3.rdat2;
+// assign dpif.dmemstore = (fuif.forwardA != 0 || fuif.forwardB != 0) ? (stage3.ALU_output) : stage3.rdat2;
+assign dpif.dmemstore = stage3.rdat2;
 
 assign dpif.imemaddr = PC;  
 
