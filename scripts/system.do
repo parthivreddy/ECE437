@@ -84,7 +84,6 @@ add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/memaddr
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/memstore
 add wave -noupdate -group stage1/IF_ID /system_tb/DUT/CPU/DP/stage1.PC_plus_four
 add wave -noupdate -group stage1/IF_ID /system_tb/DUT/CPU/DP/stage1.instruction
-add wave -noupdate -group stage2/ID_EX /system_tb/DUT/CPU/DP/stage2.instruction_jump
 add wave -noupdate -group stage2/ID_EX /system_tb/DUT/CPU/DP/stage2.PC_plus_four
 add wave -noupdate -group stage2/ID_EX /system_tb/DUT/CPU/DP/stage2.rdat1
 add wave -noupdate -group stage2/ID_EX /system_tb/DUT/CPU/DP/stage2.rdat2
@@ -103,7 +102,6 @@ add wave -noupdate -group stage2/ID_EX /system_tb/DUT/CPU/DP/stage2.MemtoReg
 add wave -noupdate -group stage2/ID_EX /system_tb/DUT/CPU/DP/stage2.Link
 add wave -noupdate -group stage2/ID_EX /system_tb/DUT/CPU/DP/stage2.LUI
 add wave -noupdate -group stage2/ID_EX /system_tb/DUT/CPU/DP/stage2.RegWr
-add wave -noupdate -group stage3/EX_MEM /system_tb/DUT/CPU/DP/stage3.instruction_jump
 add wave -noupdate -group stage3/EX_MEM /system_tb/DUT/CPU/DP/stage3.PC_plus_four
 add wave -noupdate -group stage3/EX_MEM /system_tb/DUT/CPU/DP/stage3.rdat1
 add wave -noupdate -group stage3/EX_MEM /system_tb/DUT/CPU/DP/stage3.rdat2
@@ -135,16 +133,16 @@ add wave -noupdate /system_tb/DUT/CPU/DP/nstage1
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage2
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage3
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage4
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/jump
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/branch
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/flush1
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/set2
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stall
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_MemRead
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/npc_sel
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rs
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rt
-add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_rt
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/jump
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/branch
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/flush1
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/flush2
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stall
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_MemRead
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/npc_sel
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rs
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rt
+add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_rt
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage2_rs
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage2_rt
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage3_rd
@@ -154,7 +152,7 @@ add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage4_RegWr
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardA
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardB
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {366910 ps} 0}
+WaveRestoreCursors {{Cursor 1} {1311627791 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -170,4 +168,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {748250 ps} {1013250 ps}
+WaveRestoreZoom {1311548250 ps} {1311813250 ps}

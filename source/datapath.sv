@@ -88,6 +88,7 @@ module datapath (
   assign fuif.stage4_rd = stage4.dest;
   assign fuif.stage3_RegWr = stage3.RegWr;
   assign fuif.stage4_RegWr = stage4.RegWr;
+  assign fuif.stage2_MemWr = stage2.MemWrite;
   
 
   always_ff @(posedge CLK, negedge nRST) begin : PIPES
@@ -204,6 +205,10 @@ module datapath (
           begin
             nstage3.rdat2 = stage4.PC_plus_four;
           end
+          else if(stage4.MemRead) //will only happen between stage2 and 4 for storing right after lw
+          begin
+            nstage3.rdat2 = stage4.dmemload;
+          end
           else
           begin
             nstage3.rdat2 = stage4.ALU_output;
@@ -263,6 +268,7 @@ always_comb begin : STG4
         nstage4.rdat2 = stage3.rdat2;
 
         //Control Signals
+        nstage4.MemRead = stage3.MemRead;
         nstage4.MemtoReg = stage3.MemtoReg;
         nstage4.Link = stage3.Link;
         nstage4.LUI = stage3.LUI;
@@ -466,11 +472,11 @@ always_ff @(posedge CLK, negedge nRST) begin : PCFF
     else if(dpif.ihit && !huif.stall)
     begin
         PC <= nPC; //stage4.PC_result
-        dpif.halt <= (dpif.halt | stage4.halt);
+        dpif.halt <= (dpif.halt | stage3.halt);
     end
     else
     begin
-        dpif.halt <= (dpif.halt | stage4.halt);
+        dpif.halt <= (dpif.halt | stage3.halt);
     end
 end
 
@@ -500,7 +506,7 @@ always_comb begin : PCUPDT
           end
           else
           begin
-            nPC = rfif.rdat1;
+            nPC = stage2.rdat1;
           end
         end
         else

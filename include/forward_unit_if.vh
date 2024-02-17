@@ -13,17 +13,18 @@ interface forward_unit_if;
 
   logic [4:0] stage2_rs, stage2_rt, stage3_rd, stage4_rd;
   logic stage3_RegWr, stage4_RegWr;
+  logic stage2_MemWr;
   //
   logic [1:0] forwardA, forwardB; //for stage 2
 
   modport fu (
-    input stage2_rs, stage2_rt, stage3_rd, stage4_rd, stage3_RegWr, stage4_RegWr,
+    input stage2_rs, stage2_rt, stage3_rd, stage4_rd, stage3_RegWr, stage4_RegWr, stage2_MemWr,
     output forwardA, forwardB
   );
 
   modport tb (
     input forwardA, forwardB,
-    output stage2_rs, stage2_rt, stage3_rd, stage4_rd, stage3_RegWr, stage4_RegWr
+    output stage2_rs, stage2_rt, stage3_rd, stage4_rd, stage3_RegWr, stage4_RegWr, stage2_MemWr
   );
 endinterface
 `endif
