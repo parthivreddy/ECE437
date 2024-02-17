@@ -301,7 +301,7 @@ always_ff @(posedge CLK, negedge nRST) begin : RQFF
         dpif.dmemREN <= 0;
         dpif.dmemWEN <= 0;
     end
-    else
+    else if(dpif.ihit)
     begin
       // dpif.dmemREN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemRead);
       // dpif.dmemWEN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemWrite);
@@ -484,7 +484,7 @@ end
 
 always_comb begin : PCUPDT
     nPC = PC;
-    if(dpif.ihit && !huif.stall)
+    if(prog && !huif.stall)
     begin
         if((stage2.Beq && alif.zero) || (stage2.Bne && !alif.zero))
         begin
