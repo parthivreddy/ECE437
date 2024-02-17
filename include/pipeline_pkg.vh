@@ -9,7 +9,6 @@ typedef struct packed {
 } IF_ID;
 
 typedef struct packed {
-    logic [25:0] instruction_jump;
     logic [31:0] PC_plus_four;
     logic [31:0] rdat1;
     logic [31:0] rdat2;
@@ -25,7 +24,6 @@ typedef struct packed {
 } ID_EX;
 
 typedef struct packed {
-    logic [25:0] instruction_jump;
     logic [31:0] PC_plus_four;
     logic [31:0] rdat1;
     logic [31:0] rdat2;

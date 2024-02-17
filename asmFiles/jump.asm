@@ -22,6 +22,7 @@ add  $2, $3, $0
 
 nextnext:
     sw $1, 4($3)
+    addi $10, $0, 1
     addi $4, $31, 20
     jr $4
     halt

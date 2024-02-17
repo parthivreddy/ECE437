@@ -21,14 +21,14 @@ import cpu_types_pkg::*;
                 fuif.forwardB = 2'b10;
             end
         end
-        else if(fuif.stage4_RegWr && fuif.stage4_rd != 0)
+        if(fuif.stage4_RegWr && fuif.stage4_rd != 0)
         begin
-            if(fuif.stage4_rd == fuif.stage2_rs)
+            if(fuif.stage4_rd == fuif.stage2_rs && fuif.stage3_rd != fuif.stage2_rs) //use more recent result
             begin
                 fuif.forwardA = 2'b01;
             end
 
-            if(fuif.stage4_rd == fuif.stage2_rt)
+            if(fuif.stage4_rd == fuif.stage2_rt && fuif.stage3_rd != fuif.stage2_rt) //use more recent result
             begin
                 fuif.forwardB = 2'b01;
             end

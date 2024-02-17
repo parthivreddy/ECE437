@@ -74,6 +74,7 @@ module datapath (
 
   //Hazard Unit inputs
   assign huif.jump = ctif.Jump;
+  assign huif.jr = stage2.JR;
   assign huif.branch = (stage2.Beq && alif.zero) || (stage2.Bne && !alif.zero);
   assign huif.stage1_rs = rs;
   assign huif.stage1_rt = rt;
@@ -123,13 +124,12 @@ module datapath (
   always_comb begin : STG2
     nstage2 = stage2;
     //nstage2.dest = stage2.dest;
-    if(huif.set2 || huif.stall)
+    if(huif.flush2 || huif.stall)
     begin
         nstage2 = 0;
     end
     else if(enable)
     begin
-        nstage2.instruction_jump = stage1.instruction[25:0];
         nstage2.PC_plus_four = stage1.PC_plus_four;
         nstage2.rdat1 = rfif.rdat1;
         nstage2.rdat2 = rfif.rdat2;
@@ -176,10 +176,44 @@ module datapath (
     end
     else if(enable)
     begin
-        nstage3.instruction_jump = stage2.instruction_jump;
         nstage3.PC_plus_four = stage2.PC_plus_four;
         nstage3.rdat1 = stage2.rdat1;
-        nstage3.rdat2 = (fuif.forwardA != 0 || fuif.forwardB != 0) ? (stage3.ALU_output) : stage2.rdat2;
+        //rdat2 hazard only occurs when storing after modifying register in prev inst. Only need to worry about rt because thats the memload
+        if(fuif.forwardB == 2)
+        begin
+          if(stage3.LUI)
+          begin
+            nstage3.rdat2 = stage3.LUIdat;
+          end
+          else if(stage3.Link)
+          begin
+            nstage3.rdat2 = stage3.PC_plus_four;
+          end
+          else
+          begin
+            nstage3.rdat2 = stage3.ALU_output;
+          end
+        end
+        else if(fuif.forwardB == 1)
+        begin
+          if(stage4.LUI)
+          begin
+            nstage3.rdat2 = stage4.LUIdat;
+          end
+          else if(stage4.Link)
+          begin
+            nstage3.rdat2 = stage4.PC_plus_four;
+          end
+          else
+          begin
+            nstage3.rdat2 = stage4.ALU_output;
+          end
+        end 
+        else
+        begin
+          nstage3.rdat2 = stage2.rdat2;
+        end
+        //nstage3.rdat2 = (fuif.forwardA != 0 || fuif.forwardB != 0) ? (stage3.ALU_output) : stage2.rdat2;
         nstage3.LUIdat = stage2.LUIdat;
         nstage3.dest = stage2.dest;
         nstage3.branchPC =  {stage2.PC_plus_four + {stage2.immExtension[29:0], 2'b0}};
@@ -327,14 +361,14 @@ always_comb begin : ALUINTS
   begin
     alif.port_a = stage2.rdat1;
   end
-  if(fuif.forwardB == 2'b10)
+  if(stage2.ALUSrc)
+  begin
+    alif.port_b = stage2.immExtension;
+  end
+  else if(fuif.forwardB == 2'b10)
   begin
     //alif.port_b = stage2.ALUSrc ? stage2.immExtension : (stage4.MemtoReg ? stage4.dmemload : stage4.ALU_output);
-    if(stage2.ALUSrc)
-    begin
-      alif.port_b = stage2.immExtension;
-    end
-    else if(stage3.LUI)
+    if(stage3.LUI)
     begin
       alif.port_b = stage3.LUIdat;
     end
@@ -350,11 +384,7 @@ always_comb begin : ALUINTS
   end
   else if(fuif.forwardB == 2'b01)
   begin
-    if(stage2.ALUSrc)
-    begin
-      alif.port_b = stage2.immExtension;
-    end
-    else if(stage4.LUI)
+    if(stage4.LUI)
     begin
       alif.port_b = stage4.LUIdat;
     end
@@ -373,7 +403,7 @@ always_comb begin : ALUINTS
   end
   else
   begin
-    alif.port_b = stage2.ALUSrc ? stage2.immExtension : stage2.rdat2;
+    alif.port_b = stage2.rdat2;
   end
 end
 // assign alif.port_a = stage2.rdat1;
@@ -458,9 +488,20 @@ always_comb begin : PCUPDT
         begin
             nPC = {stage1.PC_plus_four[31:28], stage1.instruction[25:0], 2'b0};
         end
-        else if(ctif.JR) //Add stuff for this in forwarding unit
+        else if(stage2.JR) //Add stuff for this in forwarding unit
         begin
+          if(fuif.forwardA == 2)
+          begin
+            nPC = stage3.ALU_output;
+          end
+          else if(fuif.forwardA == 1)
+          begin
+            nPC = stage4.ALU_output;
+          end
+          else
+          begin
             nPC = rfif.rdat1;
+          end
         end
         else
         begin
