@@ -12,8 +12,9 @@ module hazard_unit (
     always_comb begin
         huif.flush1 = 0;
         huif.flush2 = 0;
+        huif.flush3 = 0;
         huif.stall = 0;
-        huif.npc_sel = 0;
+
 
         // load hazard
         // if (ID/EX.MemRead and
@@ -22,7 +23,7 @@ module hazard_unit (
         //  stall the pipeline
 
         //maybe stall pipeline for JR
-        if ((huif.stage2_MemRead) && 
+        if ((huif.stage2_MemRead && !huif.branch) && 
             ((huif.stage2_rt == huif.stage1_rs) ||
             (huif.stage2_rt == huif.stage1_rt))) begin
 
@@ -35,12 +36,11 @@ module hazard_unit (
         if (huif.branch) begin
             huif.flush1 = 1;
             huif.flush2 = 1;
-            huif.npc_sel = 2;
+            huif.flush3 = 1;
         end
         // jump "hazard"
         else if (huif.jump) begin
             huif.flush1 = 1;
-            huif.npc_sel = 1;
         end
         else if(huif.jr) begin
             huif.flush1 = 1;

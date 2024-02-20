@@ -11,18 +11,17 @@ interface hazard_unit_if;
   // import types
   import cpu_types_pkg::*;
 
-  logic         jump, branch, flush1, flush2, stall, stage2_MemRead, jr;
-  logic [1:0]   npc_sel;
+  logic         jump, branch, flush1, flush2, flush3, stall, stage2_MemRead, jr;
   regbits_t     stage1_rs, stage1_rt, stage2_rt;
 
   // register file ports
   modport hu (
     input   jump, branch, stage1_rs, stage1_rt, stage2_rt, stage2_MemRead, jr,
-    output  flush1, flush2, stall, npc_sel
+    output  flush1, flush2, flush3, stall
   );
   // register file tb
   modport tb (
-    input   flush1, flush2, stall, npc_sel,
+    input   flush1, flush2, flush3, stall,
     output  jump, branch, stage1_rs, stage1_rt, stage2_rt, stage2_MemRead, jr
   );
 endinterface
