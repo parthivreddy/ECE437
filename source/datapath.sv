@@ -36,7 +36,7 @@ module datapath (
   logic [31:0] PC;
   logic [31:0] nPC;
   logic prog;
-  logic flush, enable;
+  logic flush;
 
   //halt flip flop signal
   logic nHalt;
@@ -64,7 +64,6 @@ module datapath (
 
   assign prog = (dpif.ihit);
   assign flush = 0;
-  assign enable = 1;
 
   IF_ID stage1, nstage1;
   ID_EX stage2, nstage2;
@@ -75,7 +74,7 @@ module datapath (
   //Hazard Unit inputs
   assign huif.jump = ctif.Jump;
   assign huif.jr = stage2.JR;
-  assign huif.branch = (stage2.Beq && alif.zero) || (stage2.Bne && !alif.zero);
+  assign huif.branch = (stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero);
   assign huif.stage1_rs = rs;
   assign huif.stage1_rt = rt;
   assign huif.stage2_rt = stage2.rt;
@@ -115,7 +114,7 @@ module datapath (
     begin
         nstage1 = 0;
     end
-    else if(enable && !huif.stall)
+    else if(!huif.stall)
     begin
         nstage1.PC_plus_four = PC + 4;
         nstage1.instruction = dpif.imemload;
@@ -129,7 +128,7 @@ module datapath (
     begin
         nstage2 = 0;
     end
-    else if(enable)
+    else
     begin
         nstage2.PC_plus_four = stage1.PC_plus_four;
         nstage2.rdat1 = rfif.rdat1;
@@ -138,7 +137,7 @@ module datapath (
         nstage2.LUIdat = {imm16, 16'b0};
         nstage2.rs = rs;
         nstage2.rt = rt;
-        nstage2.rd = rd;
+        // nstage2.rd = rd;
         if(ctif.Link)
         begin
             nstage2.dest = 31;
@@ -171,11 +170,11 @@ module datapath (
 
   always_comb begin : STG3
     nstage3 = stage3;
-    if(flush)
+    if(huif.flush3)
     begin
         nstage3 = 0;
     end
-    else if(enable)
+    else
     begin
         nstage3.PC_plus_four = stage2.PC_plus_four;
         nstage3.rdat1 = stage2.rdat1;
@@ -221,12 +220,12 @@ module datapath (
         //nstage3.rdat2 = (fuif.forwardA != 0 || fuif.forwardB != 0) ? (stage3.ALU_output) : stage2.rdat2;
         nstage3.LUIdat = stage2.LUIdat;
         nstage3.dest = stage2.dest;
-        nstage3.branchPC =  {stage2.PC_plus_four + {stage2.immExtension[29:0], 2'b0}};
+        nstage3.branchPC = {stage2.PC_plus_four + {stage2.immExtension[29:0], 2'b0}};
         nstage3.zero = alif.zero;
         nstage3.ALU_output = alif.ALU_output;
-        nstage3.rs = stage2.rs;
-        nstage3.rt = stage2.rt;
-        nstage3.rd = stage2.rd;
+        // nstage3.rs = stage2.rs;
+        // nstage3.rt = stage2.rt;
+        // nstage3.rd = stage2.rd;
 
         //Control Signals Pass
         nstage3.MemRead = stage2.MemRead;
@@ -254,7 +253,7 @@ always_comb begin : STG4
     begin
         nstage4 = 0;
     end
-    else if(enable)
+    else
     begin
         //nstage4.dmemload = dpif.dmemload; //CHANGE BACK
         nstage4.dmemload = dmemFF;
@@ -262,10 +261,10 @@ always_comb begin : STG4
         nstage4.dest = stage3.dest;
         nstage4.PC_plus_four = stage3.PC_plus_four;
         nstage4.ALU_output = stage3.ALU_output;
-        nstage4.rs = stage3.rs;
-        nstage4.rt = stage3.rt;
-        nstage4.rd = stage3.rd;
-        nstage4.rdat2 = stage3.rdat2;
+        // nstage4.rs = stage3.rs;
+        // nstage4.rt = stage3.rt;
+        // nstage4.rd = stage3.rd;
+        // nstage4.rdat2 = stage3.rdat2;
 
         //Control Signals
         nstage4.MemRead = stage3.MemRead;
@@ -273,7 +272,7 @@ always_comb begin : STG4
         nstage4.Link = stage3.Link;
         nstage4.LUI = stage3.LUI;
         nstage4.RegWr = stage3.RegWr;
-        nstage4.halt = stage3.halt;
+        // nstage4.halt = stage3.halt;
     end
 end
 //one between execute and memory advance on ihit and dhit
@@ -296,7 +295,7 @@ always_ff @(posedge CLK, negedge nRST) begin : RQFF
         dpif.dmemREN <= 0;
         dpif.dmemWEN <= 0;
     end
-    else if(dpif.dhit)
+    else if(dpif.dhit || (stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
     begin
         dpif.dmemREN <= 0;
         dpif.dmemWEN <= 0;
@@ -424,20 +423,6 @@ assign dpif.dmemstore = stage3.rdat2;
 
 assign dpif.imemaddr = PC;  
 
-// always_ff @(posedge CLK, negedge nRST) begin : STORELGC
-
-//   if(!nRST)
-//   begin
-//     dpif.dmemstore <= 0;
-//     //dpif.dmemaddr <= 0;
-//   end
-//   else
-//   begin
-//     dpif.dmemstore <= nstore;
-//     //dpif.dmemaddr <= naddr;
-//   end
-// end
-
 always_comb begin : RGFILE
     rfif.wdat = 0;
     rfif.wsel = stage4.dest;
@@ -480,15 +465,13 @@ always_ff @(posedge CLK, negedge nRST) begin : PCFF
     end
 end
 
-//INcorrect but lets do it anwyay
-
 always_comb begin : PCUPDT
     nPC = PC;
-    if(dpif.ihit && !huif.stall)
+    if(prog && !huif.stall)
     begin
-        if((stage2.Beq && alif.zero) || (stage2.Bne && !alif.zero))
+        if((stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
         begin
-            nPC = {stage2.PC_plus_four + {stage2.immExtension[29:0], 2'b0}};
+            nPC = stage3.branchPC;
         end
         else if(ctif.Jump)
         begin
