@@ -1,10 +1,11 @@
 `include "cpu_types_pkg.vh"
-`include "cache_control_if
-.vh"
+`include "caches_if.vh"
+`include "datapath_cache_if.vh"
 
 module icache(
+    input logic CLK, nRST,
     datapath_cache_if.icache dcif,
-    cache_if.icache cif
+    caches_if.icache cif
 );
 
 
@@ -40,6 +41,7 @@ end
 
 always_comb begin : CMBLGC
     nState = currState;
+    ncache = cache;
     cif.iREN = 0;
     cif.iaddr = 0;
     dcif.ihit = 0;
@@ -57,7 +59,7 @@ always_comb begin : CMBLGC
                 begin
 
                     dcif.ihit = 1;
-                    dcif.imemload = cache.data;
+                    dcif.imemload = cache[addr.idx].data;
                 end
                 else if(!cache[addr.idx].valid || cache[addr.idx].tag != addr.tag) //miss
                 begin
@@ -80,7 +82,7 @@ always_comb begin : CMBLGC
                 begin
                     dcif.imemload = cif.iload;
                     dcif.ihit = 1;
-                    ncache[addr.idx].tag = addr.tag
+                    ncache[addr.idx].tag = addr.tag;
                     ncache[addr.idx].data = cif.iload;
                     ncache[addr.idx].valid = 1;
                     nState = IDLE;
