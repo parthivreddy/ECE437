@@ -207,39 +207,11 @@ module cpu_tracker(
     endcase
   endfunction
 
-<<<<<<< HEAD
-  // LW are a half cycle too late due to state machine inside
-  // request unit. This is a work a round for that problem.
-  always_ff @ (posedge CLK) begin
-    if (dhit) begin
-        if (last_opcode == LW) begin
-          $sformat(ram_str, "    [word read");
-          $sformat(ram_str, "%s from %x]\n", ram_str, {16'h0, dat_addr[15:0]});
-          $sformat(ram_str, "%s    %s", ram_str, dest_str);
-          $sformat(ram_str, "%s <-- %x\n", ram_str, load_dat);
-          $sformat(lw_str, "%s%s\n", temp_str, ram_str);
-          $fwrite(fptr, lw_str);
-        end
-    end
-  end
-
-  always_ff @ (posedge CLK) begin
-    if (!wb_stall)
-      last_opcode <= opcode;
-  end
-
-  always_ff @ (posedge CLK) begin
-    if (!wb_stall && instr != 0) begin
-      $sformat(temp_str, "%X (Core %d): %X", pc, CPUID + 1, instr);
-      $sformat(temp_str, "%s %s %s\n", temp_str, instr_mnemonic, operands);
-      $sformat(temp_str, "%s    PC <-- %X\n", temp_str, npc);
-=======
   always_ff @ (posedge CLK) begin
     if (wb_enable && instr != 0) begin
       $sformat(temp_str, "%X (Core %d): %X", pc, CPUID + 1, instr);
       $sformat(temp_str, "%s %s %s\n", temp_str, instr_mnemonic, operands);
       $sformat(temp_str, "%s    PC <-- %X\n", temp_str, next_pc_val);
->>>>>>> c54c166650f4a106c60fd07435109d6e4e177e69
       case(opcode)
         RTYPE: case(funct)
           ADDU, ADD, AND,
@@ -257,13 +229,6 @@ module cpu_tracker(
               $sformat(temp_str, "%s <-- %x\n", temp_str, store_dat);
         end
         //TODO: atomic instructions
-<<<<<<< HEAD
-      endcase
-      $sformat(output_str, "%s\n", temp_str);
-      // LW are handled differently
-      if (opcode != LW)
-        $fwrite(fptr, output_str);
-=======
         LW: begin
               $sformat(temp_str, "%s    [word read", temp_str);
               $sformat(temp_str, "%s from %x]\n", temp_str, {16'h0, dat_addr[15:0]});
@@ -273,7 +238,6 @@ module cpu_tracker(
       endcase
       $sformat(output_str, "%s\n", temp_str);
       $fwrite(fptr, output_str);
->>>>>>> c54c166650f4a106c60fd07435109d6e4e177e69
     end
   end
 
