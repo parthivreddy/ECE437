@@ -44,13 +44,18 @@ always_comb begin : CMBLGC
     cif.iaddr = 0;
     dcif.ihit = 0;
     dcif.imemload = 0;
-    if(imemREN)
+    if(!dcif.imemREN)
+    begin
+        nState = IDLE;
+    end
+    else
     begin
         case(currState)
             IDLE:
             begin
                 if(cache[addr.idx].valid && cache[addr.idx].tag == addr.tag) //hit
                 begin
+
                     dcif.ihit = 1;
                     dcif.imemload = cache.data;
                 end
