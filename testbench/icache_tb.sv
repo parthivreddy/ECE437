@@ -17,8 +17,8 @@ endmodule
 program test(
     input logic CLK,
     output logic nRST,
-    datapath_cache_if.icachetb dcif,
-    caches_if.icachetb cif
+    datapath_cache_if.icache dcif,
+    caches_if.icache cif
 );
     import cpu_types_pkg::*;
     parameter PERIOD = 10;

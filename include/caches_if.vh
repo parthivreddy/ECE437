@@ -61,12 +61,6 @@ interface caches_if;
             iREN, iaddr
   );
 
-  modport icachetb (
-    input iREN, iaddr,
-    output iwait, iload
-  );
-
-
 endinterface
 
 `endif //CACHES_IF_VH
