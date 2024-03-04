@@ -16,6 +16,8 @@ module dcache(
     d_cache_frame [7:0] next_dcache_set_0;
     d_cache_frame [7:0] next_dcache_set_1;
 
+    logic [7:0] least_recent_set;
+
     dcachef_t addr;
 
     
