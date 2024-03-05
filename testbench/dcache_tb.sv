@@ -119,20 +119,13 @@ program test(
         cif.dwait = 0;
         @(posedge CLK);
 
+        // cif.dwait = 1;
+        // #(PERIOD*5);
+        // cif.dwait = 0;
+        // @(posedge CLK);
+
         cif.dwait = 1;
-        #(PERIOD*5);
-        cif.dwait = 0;
         @(posedge CLK);
-
-        // cif.dwait = 1;
-        // #(PERIOD*5);
-        // cif.dwait = 0;
-        // @(posedge CLK);
-
-        // cif.dwait = 1;
-        // #(PERIOD*5);
-        // cif.dwait = 0;
-        // @(posedge CLK);
 
         cif.dwait = 1;
         dcif.dmemWEN = 0;
@@ -162,6 +155,8 @@ program test(
         @(posedge CLK);
         @(posedge CLK);
         cif.dwait = 0;
+        @(posedge CLK);
+        @(posedge CLK);
         @(posedge CLK);
         @(posedge CLK);
         cif.dwait = 1;
