@@ -21,7 +21,6 @@ assign addr.bytoff = dcif.imemaddr[1:0];
 assign addr.idx = dcif.imemaddr[5:2];
 assign addr.tag = dcif.imemaddr[31:6];
 
-logic 
 
 typedef enum logic {IDLE, MISS} state;
 
