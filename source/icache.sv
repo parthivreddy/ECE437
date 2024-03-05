@@ -47,11 +47,12 @@ always_comb begin : CMBLGC
     cif.iaddr = 0;
     dcif.ihit = 0;
     dcif.imemload = 0;
-    if(!dcif.imemREN)
-    begin
-        nState = IDLE;
-    end
-    else
+    // if(!dcif.imemREN)
+    // begin
+    //     nState = IDLE;
+    // end
+    // else
+    if(dcif.imemREN)
     begin
         case(currState)
             IDLE:
