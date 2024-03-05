@@ -21,6 +21,8 @@ assign addr.bytoff = dcif.imemaddr[1:0];
 assign addr.idx = dcif.imemaddr[5:2];
 assign addr.tag = dcif.imemaddr[31:6];
 
+logic 
+
 typedef enum logic {IDLE, MISS} state;
 
 state currState;
@@ -57,28 +59,21 @@ always_comb begin : CMBLGC
             begin
                 if(cache[addr.idx].valid && cache[addr.idx].tag == addr.tag) //hit
                 begin
-
                     dcif.ihit = 1;
                     dcif.imemload = cache[addr.idx].data;
                 end
                 else if(!cache[addr.idx].valid || cache[addr.idx].tag != addr.tag) //miss
                 begin
-                    cif.iREN = 1;
-                    cif.iaddr = dcif.imemaddr;
-                    dcif.ihit = 0;
                     nState = MISS;
                 end
 
             end
             MISS:
             begin
-                if(cif.iwait) //possibly latch signals from IDLE->MISS
-                begin
-                    cif.iREN = 1;
-                    cif.iaddr = dcif.imemaddr;
-                    dcif.ihit = 0;
-                end
-                else
+                cif.iREN = 1;
+                cif.iaddr = dcif.imemaddr;
+                dcif.ihit = 0;
+                if(!cif.iwait)
                 begin
                     dcif.imemload = cif.iload;
                     dcif.ihit = 1;

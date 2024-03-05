@@ -4,9 +4,9 @@ ori $3, $0, 3
 
 LOOP:
     beq $1, $0, END
-    lw  $3, 0($2)
+    sw  $3, 0($2)
     subi $1, $1, 1
-    j LOOP
+    addi $3, $3, 1
+    bne $1, $0, LOOP
 
-END:
-    halt
+halt
