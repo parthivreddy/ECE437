@@ -84,18 +84,17 @@ module dcache(
                     begin
                         dcif.dhit = 1;
                         dcif.dmemload = dcache[0][addr.idx].data[addr.blkoff];
-                        ndcache[0][addr.idx].dirty = dcif.dmemWEN ? 1 : 0;
+                        ndcache[0][addr.idx].dirty = dcif.dmemWEN ? 1 : dcache[0][addr.idx].dirty;
                         nhit_counter = hit_counter + 1;
                         nLRU[addr.idx] = 1;
-                        nState = IDLE;
                     end
                     else if(dcache[1][addr.idx].valid && dcache[1][addr.idx].tag == addr.tag)
                     begin
                         dcif.dhit = 1;
                         dcif.dmemload = addr.blkoff ? dcache[1][addr.idx].data[1] : dcache[1][addr.idx].data[0];
-                        ndcache[1][addr.idx].dirty = dcif.dmemWEN ? 1 : 0;
+                        ndcache[1][addr.idx].dirty = dcif.dmemWEN ? 1 : dcache[1][addr.idx].dirty;
+                        nhit_counter = hit_counter + 1;
                         nLRU[addr.idx] = 0;
-                        nState = IDLE;
                     end
                     //Misses
                     else if(dcache[LRU[addr.idx]][addr.idx].dirty)
@@ -108,30 +107,25 @@ module dcache(
                     end
                 end
             end
-            OUTPUT:
-            begin
-                //nLRU[addr.idx] = ~LRU[addr.idx];
-                nState = IDLE;
-            end
             WB1: //writing LRU data into RAM
             begin
-                if(dcache[LRU[addr.idx]][addr.idx].valid)
+                cif.daddr = dcif.dmemaddr;
+                cif.dstore = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
+                cif.dWEN = 1;
+                if(!cif.dwait)
                 begin
-                    cif.daddr = dcif.dmemaddr;
-                    cif.dstore = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
-                    cif.dWEN = 1;
+                    nState = WB2;
                 end
-                nState = WB2;
             end
             WB2:
             begin
-                if(dcache[LRU[addr.idx]][addr.idx].valid)
+                cif.daddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
+                cif.dstore = dcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff];
+                cif.dWEN = 1;
+                if(!cif.dwait)
                 begin
-                    cif.daddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
-                    cif.dstore = dcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff];
-                    cif.dWEN = 1;
+                    nState = ALLOCATE1;
                 end
-                nState = ALLOCATE1;
             end
             ALLOCATE1: //Taking RAM data and putting it into LRU cache
             //Swap ALLOCATE1 and ALLOCATE2
@@ -171,7 +165,8 @@ module dcache(
                         ndcache[LRU[addr.idx]][addr.idx].valid = 1;
                         ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
                         dcif.dhit = 1;
-                        nLRU[addr.idx] = LRU[addr.idx];
+                        nLRU[addr.idx] = ~LRU[addr.idx];
+                        dcif.dmemload = cif.dload;
                         nState = IDLE;
                     end
 
@@ -189,21 +184,17 @@ module dcache(
                         nState = ENDWR2;
                     end
                 end
-                nState = ENDWR2;
+                nState = INCRCNT;
             end
             ENDWR2:
             begin
-                if(dcache[endSet][index].dirty)
+                cif.dWEN = 1;
+                cif.daddr = {dcache[endSet][index].tag, index, 1'b1, 2'b0};
+                cif.dstore = dcache[endSet][index].data[1];
+                if(!cif.dwait)
                 begin
-                    cif.dWEN = 1;
-                    cif.daddr = {dcache[endSet][index].tag, index, 1'b1, 2'b0};
-                    cif.dstore = dcache[endSet][index].data[1];
-                    if(!cif.dwait)
-                    begin
-                        nState = INCRCNT;
-                    end
+                    nState = INCRCNT;
                 end
-                nState = INCRCNT;
             end
             INCRCNT:
             begin
@@ -250,10 +241,6 @@ module dcache(
             begin
                 dcif.flushed = 1;
             end
-            
-            
-
-
         endcase
         // end
 
@@ -262,3 +249,5 @@ module dcache(
     
 
 endmodule
+
+//hit count might be off because of load word stalling maybe don't incr all the time when stalling in load mem

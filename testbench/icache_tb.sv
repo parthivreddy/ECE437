@@ -59,6 +59,18 @@ program test(
         #(PERIOD);
         dcif.imemREN = 0;
 
+        testType = "Populate idx 3 of cache"; //Miss
+        instReq(6, 3);
+        dcif.imemREN = 1;
+        cif.iwait = 1;
+        #(PERIOD);
+        #(PERIOD); //make sure does not progress to IDLE and stays in MISS
+        cif.iwait = 0;
+        cif.iload = 15;
+        #(PERIOD);
+        #(PERIOD);
+        dcif.imemREN = 0;
+
         testType = "Grab info from idx 2 of cache"; //hit
         instReq(5, 2);
         dcif.imemREN = 1;

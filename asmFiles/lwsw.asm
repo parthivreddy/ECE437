@@ -1,10 +1,16 @@
-ori $1, $0, 5
+ori $1, $0, 2
 ori $2, $0, 0xFFC0
-sw  $1, 0($2)
-ori $3, $0, 1
-ori $4, $0, 2
-ori $1, $0, 5
-lw  $6, 0($2)
-sw  $6, 4($2)
+ori $3, $0, 3
+
+LOOP:
+    beq $1, $0, END
+    sw  $3, 0($2)
+    subi $1, $1, 1
+    addi $3, $3, 1
+    addi $2, $2, 4
+    bne $1, $0, LOOP
+
 
 halt
+
+#loop so i is from cache but incr daddr so d is from RAM
