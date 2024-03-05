@@ -108,19 +108,49 @@ program test(
         dcif.dmemWEN = 0;
         #(PERIOD*3);
 
-        testType = "Force a write back in index 3"; // miss
+        testType = "Write into index 3 slow, set 1 of cache"; // miss
         inputReset();
         instReq(11, 3, 1);
-        cif.dload = 32'hBEEF;
-        dcif.dmemREN = 1;
+        dcif.dmemstore = 32'hffff;
+        dcif.dmemWEN = 1;
+
         cif.dwait = 1;
-        @(posedge CLK);
-        @(posedge CLK);
+        #(PERIOD*5);
         cif.dwait = 0;
         @(posedge CLK);
+
+        cif.dwait = 1;
+        #(PERIOD*5);
+        cif.dwait = 0;
         @(posedge CLK);
-        dcif.dmemREN = 0;
+
+        // cif.dwait = 1;
+        // #(PERIOD*5);
+        // cif.dwait = 0;
+        // @(posedge CLK);
+
+        // cif.dwait = 1;
+        // #(PERIOD*5);
+        // cif.dwait = 0;
+        // @(posedge CLK);
+
+        cif.dwait = 1;
+        dcif.dmemWEN = 0;
         #(PERIOD*3);
+
+        testType = "Force a write back in index 3"; // miss
+        // inputReset();
+        // instReq(11, 3, 1);
+        // cif.dload = 32'hBEEF;
+        // dcif.dmemREN = 1;
+        // cif.dwait = 1;
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // cif.dwait = 0;
+        // @(posedge CLK);
+        // @(posedge CLK);
+        // dcif.dmemREN = 0;
+        // #(PERIOD*3);
 
         inputReset();
         instReq(12, 3, 1);
