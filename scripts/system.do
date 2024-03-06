@@ -67,11 +67,6 @@ add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/dload
 add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/dstore
 add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/iaddr
 add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/daddr
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/ccwait
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/ccinv
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/ccwrite
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/cctrans
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/ccsnoopaddr
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramREN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramWEN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramaddr
@@ -82,6 +77,25 @@ add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/memREN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/memWEN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/memaddr
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/memstore
+add wave -noupdate -divider Caches
+add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/cache
+add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/ncache
+add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/addr
+add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/currState
+add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/nState
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/dcache
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/ndcache
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/LRU
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nLRU
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/endSet
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/index
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nIndex
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/hit_counter
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nhit_counter
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/addr
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/currState
+add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nState
+add wave -noupdate -divider Stages
 add wave -noupdate -group stage1/IF_ID /system_tb/DUT/CPU/DP/stage1.PC_plus_four
 add wave -noupdate -group stage1/IF_ID /system_tb/DUT/CPU/DP/stage1.instruction
 add wave -noupdate -group stage2/ID_EX /system_tb/DUT/CPU/DP/stage2.PC_plus_four
@@ -133,15 +147,16 @@ add wave -noupdate /system_tb/DUT/CPU/DP/nstage1
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage2
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage3
 add wave -noupdate /system_tb/DUT/CPU/DP/nstage4
-add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/jump
-add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/branch
-add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/flush1
-add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/flush2
-add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stall
-add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_MemRead
-add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rs
-add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rt
-add wave -noupdate -expand -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_rt
+add wave -noupdate -divider Hazards
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/jump
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/branch
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/flush1
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/flush2
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stall
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_MemRead
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rs
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage1_rt
+add wave -noupdate -group {Hazard Unit} /system_tb/DUT/CPU/DP/huif/stage2_rt
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage2_rs
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage2_rt
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage3_rd
@@ -150,28 +165,8 @@ add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage3_RegWr
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage4_RegWr
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardA
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardB
-add wave -noupdate -divider Caches
-add wave -noupdate /system_tb/DUT/CPU/CM/ICACHE/CLK
-add wave -noupdate /system_tb/DUT/CPU/CM/ICACHE/nRST
-add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/cache
-add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/ncache
-add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/addr
-add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/currState
-add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/nState
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/dcache
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/ndcache
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/LRU
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nLRU
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/endSet
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/index
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nIndex
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/hit_counter
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nhit_counter
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/addr
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/currState
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nState
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1311627791 ps} 0}
+WaveRestoreCursors {{Cursor 1} {29336 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
