@@ -185,8 +185,15 @@ module dcache(
                     begin
                         nState = ENDWR2;
                     end
+                    // else
+                    // begin
+                    //     nState = ENDWR1;
+                    // end
                 end
-                nState = INCRCNT;
+                else
+                begin
+                    nState = INCRCNT;
+                end
             end
             ENDWR2:
             begin
