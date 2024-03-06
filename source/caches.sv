@@ -24,40 +24,40 @@ module caches (
   word_t daddr;
 
   // icache
-  //icache  ICACHE(dcif, cif);
+  icache  ICACHE(CLK, nRST, dcif, cif);
   // dcache
-  //dcache  DCACHE(dcif, cif);
+  dcache  DCACHE(CLK, nRST, dcif, cif);
 
   // single cycle instr saver (for memory ops)
-  always_ff @(posedge CLK)
-  begin
-    if (!nRST)
-    begin
-      instr <= '0;
-      daddr <= '0;
-    end
-    else
-    if (dcif.ihit)
-    begin
-      instr <= cif.iload;
-      daddr <= dcif.dmemaddr;
-    end
-  end
-  // dcache invalidate before halt
-  assign dcif.flushed = dcif.halt;
+  // always_ff @(posedge CLK)
+  // begin
+  //   if (!nRST)
+  //   begin
+  //     instr <= '0;
+  //     daddr <= '0;
+  //   end
+  //   else
+  //   if (dcif.ihit)
+  //   begin
+  //     instr <= cif.iload;
+  //     daddr <= dcif.dmemaddr;
+  //   end
+  // end
+  // // dcache invalidate before halt
+  // assign dcif.flushed = dcif.halt;
 
-  //singlecycle
-  assign dcif.ihit = (dcif.imemREN) ? ~cif.iwait : 0;
-  assign dcif.dhit = (dcif.dmemREN|dcif.dmemWEN) ? ~cif.dwait : 0;
-  assign dcif.imemload = cif.iload;
-  assign dcif.dmemload = cif.dload;
+  // //singlecycle
+  // assign dcif.ihit = (dcif.imemREN) ? ~cif.iwait : 0;
+  // assign dcif.dhit = (dcif.dmemREN|dcif.dmemWEN) ? ~cif.dwait : 0;
+  // assign dcif.imemload = cif.iload;
+  // assign dcif.dmemload = cif.dload;
 
 
-  assign cif.iREN = dcif.imemREN;
-  assign cif.dREN = dcif.dmemREN;
-  assign cif.dWEN = dcif.dmemWEN;
-  assign cif.dstore = dcif.dmemstore;
-  assign cif.iaddr = dcif.imemaddr;
-  assign cif.daddr = dcif.dmemaddr;
+  // assign cif.iREN = dcif.imemREN;
+  // assign cif.dREN = dcif.dmemREN;
+  // assign cif.dWEN = dcif.dmemWEN;
+  // assign cif.dstore = dcif.dmemstore;
+  // assign cif.iaddr = dcif.imemaddr;
+  // assign cif.daddr = dcif.dmemaddr;
 
 endmodule

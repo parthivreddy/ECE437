@@ -232,7 +232,7 @@ module dcache(
             WCOUNT:
             begin
                 cif.dWEN = 1;
-                dcif.dmemaddr = 32'h3100;
+                cif.daddr = 32'h3100;
                 cif.dstore = hit_counter;
                 if (cif.dwait == 0)
                 begin
