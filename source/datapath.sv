@@ -295,17 +295,17 @@ always_ff @(posedge CLK, negedge nRST) begin : RQFF
         dpif.dmemREN <= 0;
         dpif.dmemWEN <= 0;
     end
-    else if(dpif.dhit || (stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
-    begin
-        dpif.dmemREN <= 0;
-        dpif.dmemWEN <= 0;
-    end
     else if(dpif.ihit)
     begin
       // dpif.dmemREN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemRead);
       // dpif.dmemWEN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemWrite);
         dpif.dmemREN <= dpif.halt ? 0 : stage2.MemRead;
         dpif.dmemWEN <= dpif.halt ? 0 : stage2.MemWrite;
+    end
+    else if(dpif.dhit || (stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
+    begin
+        dpif.dmemREN <= 0;
+        dpif.dmemWEN <= 0;
     end
 end
 assign dpif.imemREN = dpif.halt ? 0 : 1;
