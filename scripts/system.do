@@ -57,16 +57,18 @@ add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/rfif/rdat1
 add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/rfif/rdat2
 add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/RF/arrFF
 add wave -noupdate -group RegFile /system_tb/DUT/CPU/DP/RF/arr
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/iwait
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/dwait
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/iREN
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/dREN
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/dWEN
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/iload
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/dload
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/dstore
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/iaddr
-add wave -noupdate -group MemControl /system_tb/DUT/CPU/cif0/daddr
+add wave -noupdate -expand -group MemControl -divider icache
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/iwait
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/iREN
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/iload
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/iaddr
+add wave -noupdate -expand -group MemControl -divider dcache
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/dwait
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/dREN
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/dWEN
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/dload
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/dstore
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/daddr
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramREN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramWEN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramaddr
@@ -182,4 +184,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {265 ns}
+WaveRestoreZoom {1312508250 ps} {1312773250 ps}
