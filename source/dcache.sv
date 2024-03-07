@@ -15,32 +15,30 @@ module dcache(
     logic [7:0] LRU, nLRU;
     logic endSet;
     logic [2:0] index, nIndex;
-    logic [31:0] hit_counter, nhit_counter, dmemaddrFF1, dmemaddrFF2;
+    logic [31:0] hit_counter, nhit_counter, dmemaddrFF;
 
     dcachef_t addr;
 
-    assign addr.bytoff = dmemaddrFF2[1:0];
-    assign addr.blkoff = dmemaddrFF2[2];
-    assign addr.idx = dmemaddrFF2[5:3];
-    assign addr.tag = dmemaddrFF2[31:6];
+    assign addr.bytoff = dcif.dmemaddr[1:0];
+    assign addr.blkoff = dcif.dmemaddr[2];
+    assign addr.idx = dcif.dmemaddr[5:3];
+    assign addr.tag = dcif.dmemaddr[31:6];
 
     typedef enum logic [3:0] {IDLE, COMPARE, WB1, WB2, ALLOCATE1, ALLOCATE2, OUTPUT, ENDWR1, ENDWR2, INCRCNT, WCOUNT, HALT} state;
 
     state currState;
     state nState;
 
-    always_ff @(posedge CLK, negedge nRST) begin : address
-        if(!nRST)
-        begin
-            dmemaddrFF1 <= 0;
-            dmemaddrFF2 <= 0;
-        end
-        else if (dcif.dmemWEN || dcif.dmemREN)
-        begin
-            dmemaddrFF1 <= dcif.dmemaddr;
-            dmemaddrFF2 <= dmemaddrFF1;
-        end
-    end
+    // always_ff @(posedge CLK, negedge nRST) begin : address
+    //     if(!nRST)
+    //     begin
+    //         dmemaddrFF <= 0;
+    //     end
+    //     else if (dcif.dmemWEN || dcif.dmemREN)
+    //     begin
+    //         dmemaddrFF <= dcif.dmemaddr;
+    //     end
+    // end
 
 
     always_ff @(posedge CLK, negedge nRST) begin : nST
@@ -125,7 +123,8 @@ module dcache(
             end
             WB1: //writing LRU data into RAM
             begin
-                cif.daddr = dmemaddrFF2;
+                // cif.daddr = dmemaddrFF | dcif.dmemaddr;
+                cif.daddr = dcif.dmemaddr;
                 cif.dstore = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
                 cif.dWEN = 1;
                 if(!cif.dwait)
@@ -173,7 +172,8 @@ module dcache(
                 else
                 begin
                     cif.dREN = 1;
-                    cif.daddr = dmemaddrFF2;
+                    // cif.daddr = dmemaddrFF | dcif.dmemaddr;
+                    cif.daddr = dcif.dmemaddr;
                     if(!cif.dwait)
                     begin
                         ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
