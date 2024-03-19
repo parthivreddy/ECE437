@@ -29,18 +29,6 @@ module dcache(
     state currState;
     state nState;
 
-    // always_ff @(posedge CLK, negedge nRST) begin : address
-    //     if(!nRST)
-    //     begin
-    //         dmemaddrFF <= 0;
-    //     end
-    //     else if (dcif.dmemWEN || dcif.dmemREN)
-    //     begin
-    //         dmemaddrFF <= dcif.dmemaddr;
-    //     end
-    // end
-
-
     always_ff @(posedge CLK, negedge nRST) begin : nST
         if(!nRST)
         begin
@@ -59,6 +47,17 @@ module dcache(
             hit_counter <= nhit_counter;
         end
     end
+
+    // always_ff @(posedge CLK, negedge nRST) begin : address
+    //     if(!nRST)
+    //     begin
+    //         dmemaddrFF <= 0;
+    //     end
+    //     else if (currState == IDLE)
+    //     begin
+    //         dmemaddrFF <= dcif.dmemaddr;
+    //     end
+    // end
 
     always_comb begin : CMBLGC
         nState = currState;
@@ -90,7 +89,7 @@ module dcache(
                 begin
                     nState = ENDWR1;
                 end
-                if(dcif.dmemREN || dcif.dmemWEN)
+                else if(dcif.dmemREN || dcif.dmemWEN)
                 begin
                     if(dcache[0][addr.idx].valid && dcache[0][addr.idx].tag == addr.tag)
                     begin
@@ -123,7 +122,7 @@ module dcache(
             end
             WB1: //writing LRU data into RAM
             begin
-                // cif.daddr = dmemaddrFF | dcif.dmemaddr;
+                // cif.daddr = dmemaddrFF;
                 cif.daddr = dcif.dmemaddr;
                 cif.dstore = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
                 cif.dWEN = 1;
@@ -155,6 +154,8 @@ module dcache(
                     ndcache[LRU[addr.idx]][addr.idx].valid = 1;
                     ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
                     nState = ALLOCATE2;
+                    // dcif.dhit = 1;
+                    // nState = IDLE;
                 end
             end
             ALLOCATE2:
@@ -168,11 +169,12 @@ module dcache(
                     dcif.dhit = 1;
                     nLRU[addr.idx] = ~LRU[addr.idx];
                     nState = IDLE;
+                    // nState = ALLOCATE2;
                 end
                 else
                 begin
                     cif.dREN = 1;
-                    // cif.daddr = dmemaddrFF | dcif.dmemaddr;
+                    // cif.daddr = dmemaddrFF;
                     cif.daddr = dcif.dmemaddr;
                     if(!cif.dwait)
                     begin
@@ -184,6 +186,7 @@ module dcache(
                         nLRU[addr.idx] = ~LRU[addr.idx];
                         dcif.dmemload = cif.dload;
                         nState = IDLE;
+                        // nState = ALLOCATE2;
                     end
 
                 end

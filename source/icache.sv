@@ -22,7 +22,7 @@ assign addr.idx = dcif.imemaddr[5:2];
 assign addr.tag = dcif.imemaddr[31:6];
 
 
-typedef enum logic {IDLE, MISS} state;
+typedef enum logic [1:0] {IDLE, MISS, BREAK0, BREAK1} state;
 
 state currState;
 state nState;
@@ -51,7 +51,7 @@ always_comb begin : CMBLGC
     // begin
     //     nState = IDLE;
     // end
-    // else
+
     if(dcif.imemREN)
     begin
         case(currState)
@@ -61,6 +61,7 @@ always_comb begin : CMBLGC
                 begin
                     dcif.ihit = 1;
                     dcif.imemload = cache[addr.idx].data;
+                    // nState = BREAK0;
                 end
                 else if(!cache[addr.idx].valid || cache[addr.idx].tag != addr.tag) //miss
                 begin
@@ -82,6 +83,14 @@ always_comb begin : CMBLGC
                     ncache[addr.idx].valid = 1;
                     nState = IDLE;
                 end
+            end
+            BREAK0:
+            begin
+                nState = IDLE;
+            end
+            BREAK1:
+            begin
+                nState = IDLE;
             end
         endcase
 

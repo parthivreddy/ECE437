@@ -60,9 +60,9 @@ module datapath (
 
   //Temporary read and write enable signals
   logic rqimemREN, rqdmemWEN, rqdmemREN, ndmemREN, ndmemWEN;
-  logic [31:0] dmemFF;
+  logic [31:0] dmemFF, daddrFF, dstoreFF;
+  logic delay_stall;
 
-  assign prog = (dpif.ihit);
   assign flush = 0;
 
   IF_ID stage1, nstage1;
@@ -88,7 +88,19 @@ module datapath (
   assign fuif.stage3_RegWr = stage3.RegWr;
   assign fuif.stage4_RegWr = stage4.RegWr;
   assign fuif.stage2_MemWr = stage2.MemWrite;
-  
+
+  always_ff @(posedge CLK, negedge nRST) begin
+    if(!nRST)
+    begin
+      delay_stall <= 0;
+    end
+    else
+    begin
+      delay_stall <= huif.stall;
+    end
+  end
+
+  assign prog = (dpif.ihit && (huif.stall ? dpif.dhit : 1) && ((dpif.dmemWEN || dpif.dmemREN) ? dpif.dhit : 1));
 
   always_ff @(posedge CLK, negedge nRST) begin : PIPES
     if(!nRST)
@@ -98,7 +110,7 @@ module datapath (
         stage3 <= 0;
         stage4 <= 0;
     end
-    else if(dpif.ihit)
+    else if(prog)
     begin
         stage1 <= nstage1;
         stage2 <= nstage2;
@@ -124,7 +136,7 @@ module datapath (
   always_comb begin : STG2
     nstage2 = stage2;
     //nstage2.dest = stage2.dest;
-    if(huif.flush2 || huif.stall)
+    if((huif.flush2 || huif.stall))
     begin
         nstage2 = 0;
     end
@@ -286,7 +298,6 @@ always_ff @(posedge CLK, negedge nRST) begin : MEMLD
     begin
         dmemFF <= dpif.dmemload;
     end
-    
 end
 
 always_ff @(posedge CLK, negedge nRST) begin : RQFF
@@ -295,22 +306,57 @@ always_ff @(posedge CLK, negedge nRST) begin : RQFF
         dpif.dmemREN <= 0;
         dpif.dmemWEN <= 0;
     end
-    else if(dpif.ihit)
+    else if(dpif.dhit && huif.stall)
     begin
-      // dpif.dmemREN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemRead);
-      // dpif.dmemWEN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemWrite);
-        dpif.dmemREN <= dpif.halt ? 0 : stage2.MemRead;
-        dpif.dmemWEN <= dpif.halt ? 0 : stage2.MemWrite;
+        dpif.dmemREN <= 0;
+        dpif.dmemWEN <= 0;
     end
+    // else if(dpif.ihit && !huif.flush3)
+    // begin
+    //     dpif.dmemREN <= dpif.halt ? 0 : stage2.MemRead;
+    //     dpif.dmemWEN <= dpif.halt ? 0 : stage2.MemWrite;
+    //     // dpif.dmemREN <= 1;
+    //     // dpif.dmemWEN <= 1;
+    // end
+    else if(dpif.ihit && (stage2.MemRead || stage2.MemWrite))
+    begin
+        dpif.dmemREN <= !huif.branch && stage2.MemRead;
+        dpif.dmemWEN <= !huif.branch && stage2.MemWrite;
+    end
+    // else if(dpif.ihit && stage2.MemWrite)
+    // begin
+    //     dpif.dmemWEN <= !huif.flush3;
+    // end
     else if(dpif.dhit || (stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
     begin
         dpif.dmemREN <= 0;
         dpif.dmemWEN <= 0;
     end
 end
-assign dpif.imemREN = dpif.halt ? 0 : 1;
 
-//Instruction Decoding  assign prog = (dpif.ihit || dpif.dhit);
+// always_ff @(posedge CLK, negedge nRST) begin : RQFF
+//     if(!nRST)
+//     begin
+//         dpif.dmemREN <= 0;
+//         dpif.dmemWEN <= 0;
+//     end
+//     else if(prog)
+//     begin
+//         dpif.dmemREN <= dpif.halt ? 0 : stage2.MemRead;
+//         dpif.dmemWEN <= dpif.halt ? 0 : stage2.MemWrite;
+//         // dpif.dmemREN <= 1;
+//         // dpif.dmemWEN <= 1;
+//     end
+//     else if(dpif.dhit || (stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
+//     begin
+//         dpif.dmemREN <= 0;
+//         dpif.dmemWEN <= 0;
+//     end
+// end
+
+assign dpif.imemREN = !dpif.halt;
+
+//Instruction Decoding
 assign ctif.opcode = opcode_t'(stage1.instruction[31:26]);
 assign ctif.func = funct_t'(stage1.instruction[5:0]);
 assign rs = stage1.instruction[25:21];
@@ -416,10 +462,78 @@ end
 assign alif.op = aluop_t'(stage2.ALUCtrl);
 
 //outputs to ram
-assign dpif.dmemaddr = stage3.ALU_output;
-//assign dpif.dmemstore = (fuif.forwardB == 2'b01) ? stage4.rdat2 : stage3.rdat2;
+assign dpif.dmemaddr = (huif.stall) ? alif.ALU_output : stage3.ALU_output;
+// always_comb begin
+//   dpif.dmemaddr = stage3.ALU_output;
+//   if (huif.stall)
+//   begin
+//     dpif.dmemaddr = alif.ALU_output;
+//   end
+// end
+// assign dpif.dmemstore = (fuif.forwardB == 2'b01) ? stage4.rdat2 : stage3.rdat2;
 // assign dpif.dmemstore = (fuif.forwardA != 0 || fuif.forwardB != 0) ? (stage3.ALU_output) : stage3.rdat2;
 assign dpif.dmemstore = stage3.rdat2;
+
+
+// always_ff @(posedge CLK, negedge nRST) begin
+//     if(!nRST)
+//     begin
+//         dpif.dmemaddr <= 0;
+//         dpif.dmemstore <= 0;
+//     end
+
+//     else if(!prog)
+//     begin
+//         dpif.dmemaddr <= stage3.ALU_output;
+//         dpif.dmemstore <= stage3.rdat2;
+//     end
+
+//     else if((huif.stall || stage2.MemRead || stage2.MemWrite) && !(stage3.halt))
+//     begin
+//         dpif.dmemaddr <= alif.ALU_output;
+//         dpif.dmemstore <= stage2.rdat2;
+//     end
+
+//     else if(prog && !(stage2.MemRead || stage2.MemWrite))
+//     begin
+//         dpif.dmemaddr <= stage3.ALU_output;
+//         dpif.dmemstore <= stage3.rdat2;
+//     end
+// end
+
+// next state logic for dmemaddr and dmemstore
+// always_ff @(posedge CLK, negedge nRST) begin
+//     if(!nRST)
+//     begin
+//         dpif.dmemaddr <= 0;
+//         dpif.dmemstore <= 0;
+//     end
+//     else
+//     begin
+//         dpif.dmemaddr <= daddrFF;
+//         dpif.dmemstore <= dstoreFF;
+//     end
+
+// end
+
+// always_comb begin
+//     daddrFF = dpif.dmemaddr;
+//     dstoreFF = dpif.dmemstore;
+//     if (prog && (stage2.MemRead || stage2.MemWrite))
+//     begin
+//         daddrFF = stage3.ALU_output;
+//         dstoreFF = stage3.rdat2;
+//     end
+//     else if((huif.stall || stage2.MemRead || stage2.MemWrite) && !(stage3.halt))
+//     begin
+//         daddrFF = alif.ALU_output;
+//         dstoreFF = stage2.rdat2;
+//     end
+// end
+
+
+
+// instruction address
 
 assign dpif.imemaddr = PC;  
 
@@ -454,7 +568,7 @@ always_ff @(posedge CLK, negedge nRST) begin : PCFF
         PC <= PC_INIT;
         dpif.halt <= 0;
     end
-    else if(dpif.ihit && !huif.stall)
+    else if(prog && !huif.stall)
     begin
         PC <= nPC; //stage4.PC_result
         dpif.halt <= (dpif.halt | stage3.halt);
