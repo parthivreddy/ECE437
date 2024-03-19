@@ -79,6 +79,8 @@ module datapath (
   assign huif.stage1_rt = rt;
   assign huif.stage2_rt = stage2.rt;
   assign huif.stage2_MemRead = stage2.MemRead;
+  assign huif.stage3_MemRead = stage3.MemRead;
+  assign huif.stage3_MemWrite = stage3.MemWrite;
 
   //Forward Unit inputs
   assign fuif.stage2_rs = stage2.rs;
