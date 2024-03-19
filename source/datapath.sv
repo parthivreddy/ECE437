@@ -236,7 +236,7 @@ module datapath (
         nstage3.zero = alif.zero;
         nstage3.ALU_output = alif.ALU_output;
         // nstage3.rs = stage2.rs;
-        // nstage3.rt = stage2.rt;
+        nstage3.rt = stage2.rt;
         // nstage3.rd = stage2.rd;
 
         //Control Signals Pass
@@ -268,7 +268,7 @@ always_comb begin : STG4
     else
     begin
         //nstage4.dmemload = dpif.dmemload; //CHANGE BACK
-        nstage4.dmemload = dmemFF;
+        nstage4.dmemload = (stage3.MemRead && dpif.dmemREN) ? dpif.dmemload : dmemFF;
         nstage4.LUIdat = stage3.LUIdat;
         nstage4.dest = stage3.dest;
         nstage4.PC_plus_four = stage3.PC_plus_four;
@@ -304,6 +304,11 @@ always_ff @(posedge CLK, negedge nRST) begin : RQFF
     if(!nRST)
     begin
         dpif.dmemREN <= 0;
+        dpif.dmemWEN <= 0;
+    end
+    else if(dpif.dhit && huif.stall && stage2.MemRead && stage3.MemWrite)
+    begin
+        dpif.dmemREN <= 1;
         dpif.dmemWEN <= 0;
     end
     else if(dpif.dhit && huif.stall)
@@ -468,6 +473,10 @@ assign dpif.dmemaddr = (huif.stall) ? alif.ALU_output : stage3.ALU_output;
 //   if (huif.stall)
 //   begin
 //     dpif.dmemaddr = alif.ALU_output;
+//   end
+//   else if (stage3.MemRead && dpif.dmemREN)
+//   begin
+//     dpif.dmemaddr = stage3.rt;
 //   end
 // end
 // assign dpif.dmemstore = (fuif.forwardB == 2'b01) ? stage4.rdat2 : stage3.rdat2;
