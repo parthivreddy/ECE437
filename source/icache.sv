@@ -8,8 +8,6 @@ module icache(
     caches_if.icache cif
 );
 
-
-
 import cpu_types_pkg::*;
 
 icache_frame [15:0] cache;

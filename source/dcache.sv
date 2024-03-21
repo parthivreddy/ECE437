@@ -13,35 +13,23 @@ module dcache(
     dcache_frame [1:0][7:0] dcache, ndcache;
 
     logic [7:0] LRU, nLRU;
-    logic endSet;
+    logic endSet, nEndSet;
     logic [2:0] index, nIndex;
-    logic [31:0] hit_counter, nhit_counter, dmemaddrFF1, dmemaddrFF2;
+    logic [31:0] hit_counter, nhit_counter, dmemaddrFF;
 
-    dcachef_t addr;
+    dcachef_t addr, oldaddr;
 
-    assign addr.bytoff = dmemaddrFF2[1:0];
-    assign addr.blkoff = dmemaddrFF2[2];
-    assign addr.idx = dmemaddrFF2[5:3];
-    assign addr.tag = dmemaddrFF2[31:6];
+    assign addr.bytoff = dcif.dmemaddr[1:0];
+    assign addr.blkoff = dcif.dmemaddr[2];
+    assign addr.idx = dcif.dmemaddr[5:3];
+    assign addr.tag = dcif.dmemaddr[31:6];
+
+    assign oldaddr.tag = dcache[LRU[addr.idx]][addr.idx].tag;
 
     typedef enum logic [3:0] {IDLE, COMPARE, WB1, WB2, ALLOCATE1, ALLOCATE2, OUTPUT, ENDWR1, ENDWR2, INCRCNT, WCOUNT, HALT} state;
 
     state currState;
     state nState;
-
-    always_ff @(posedge CLK, negedge nRST) begin : address
-        if(!nRST)
-        begin
-            dmemaddrFF1 <= 0;
-            dmemaddrFF2 <= 0;
-        end
-        else if (dcif.dmemWEN || dcif.dmemREN)
-        begin
-            dmemaddrFF1 <= dcif.dmemaddr;
-            dmemaddrFF2 <= dmemaddrFF1;
-        end
-    end
-
 
     always_ff @(posedge CLK, negedge nRST) begin : nST
         if(!nRST)
@@ -51,6 +39,7 @@ module dcache(
             LRU <= '0;
             index <= 0;
             hit_counter <= 0;
+            endSet <= '0;
         end
         else
         begin
@@ -59,8 +48,20 @@ module dcache(
             LRU <= nLRU;
             index <= nIndex;
             hit_counter <= nhit_counter;
+            endSet <= nEndSet;
         end
     end
+
+    // always_ff @(posedge CLK, negedge nRST) begin : address
+    //     if(!nRST)
+    //     begin
+    //         dmemaddrFF <= 0;
+    //     end
+    //     else if (currState == IDLE)
+    //     begin
+    //         dmemaddrFF <= dcif.dmemaddr;
+    //     end
+    // end
 
     always_comb begin : CMBLGC
         nState = currState;
@@ -68,6 +69,7 @@ module dcache(
         nLRU = LRU;
         nIndex = index;
         nhit_counter = hit_counter;
+        nEndSet = endSet;
 
         cif.dREN = 0;
         cif.dWEN = 0;
@@ -87,12 +89,12 @@ module dcache(
         case(currState)
             IDLE:
             begin
-                endSet = 0;
+                nEndSet = 0;
                 if(dcif.halt)
                 begin
                     nState = ENDWR1;
                 end
-                if(dcif.dmemREN || dcif.dmemWEN)
+                else if(dcif.dmemREN || dcif.dmemWEN)
                 begin
                     if(dcache[0][addr.idx].valid && dcache[0][addr.idx].tag == addr.tag)
                     begin
@@ -125,7 +127,8 @@ module dcache(
             end
             WB1: //writing LRU data into RAM
             begin
-                cif.daddr = dmemaddrFF2;
+                // cif.daddr = dmemaddrFF;
+                cif.daddr = {oldaddr.tag, addr.idx, addr.blkoff, addr.bytoff};
                 cif.dstore = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
                 cif.dWEN = 1;
                 if(!cif.dwait)
@@ -135,7 +138,7 @@ module dcache(
             end
             WB2:
             begin
-                cif.daddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
+                cif.daddr = {oldaddr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
                 cif.dstore = dcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff];
                 cif.dWEN = 1;
                 if(!cif.dwait)
@@ -156,6 +159,8 @@ module dcache(
                     ndcache[LRU[addr.idx]][addr.idx].valid = 1;
                     ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
                     nState = ALLOCATE2;
+                    // dcif.dhit = 1;
+                    // nState = IDLE;
                 end
             end
             ALLOCATE2:
@@ -169,11 +174,13 @@ module dcache(
                     dcif.dhit = 1;
                     nLRU[addr.idx] = ~LRU[addr.idx];
                     nState = IDLE;
+                    // nState = ALLOCATE2;
                 end
                 else
                 begin
                     cif.dREN = 1;
-                    cif.daddr = dmemaddrFF2;
+                    // cif.daddr = dmemaddrFF;
+                    cif.daddr = dcif.dmemaddr;
                     if(!cif.dwait)
                     begin
                         ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
@@ -184,6 +191,7 @@ module dcache(
                         nLRU[addr.idx] = ~LRU[addr.idx];
                         dcif.dmemload = cif.dload;
                         nState = IDLE;
+                        // nState = ALLOCATE2;
                     end
 
                 end
@@ -240,7 +248,7 @@ module dcache(
                 end
                 else if (index == 7)
                 begin
-                    endSet = 1;
+                    nEndSet = 1;
                     nIndex = 0;
                     nState = ENDWR1;
                 end
@@ -263,6 +271,23 @@ module dcache(
             HALT:
             begin
                 dcif.flushed = 1;
+            end
+            default:
+            begin
+                nState = currState;
+                ndcache = dcache;
+                nLRU = LRU;
+                nIndex = index;
+                nhit_counter = hit_counter;
+
+                cif.dREN = 0;
+                cif.dWEN = 0;
+                cif.daddr = 0;
+                cif.dstore = 0;
+
+                dcif.dhit = 0;
+                dcif.dmemload = 0;
+                dcif.flushed = 0;
             end
         endcase
         // end
