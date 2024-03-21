@@ -6,8 +6,8 @@ processing file asmFiles/branch.beq_not_taken.asm (5 of 31)
 processing file asmFiles/branch.bne.asm (6 of 31)
 processing file asmFiles/branch.bne_not_taken.asm (7 of 31)
 processing file asmFiles/count_days.asm (8 of 31)
---- memsim.hex	2024-03-21 14:19:58.083939313 -0400
-+++ memcpu.hex	2024-03-21 14:19:58.064938629 -0400
+--- memsim.hex	2024-03-21 14:34:24.277138574 -0400
++++ memcpu.hex	2024-03-21 14:34:24.263138069 -0400
 @@ -43,6 +43,6 @@
  :04002A000800001BAF
  :04002B0003E00008E6
@@ -31,8 +31,8 @@ processing file asmFiles/jump2.asm (19 of 31)
 processing file asmFiles/jump.asm (20 of 31)
 processing file asmFiles/lwsw.asm (21 of 31)
 processing file asmFiles/mergesort.asm (22 of 31)
---- memsim.hex	2024-03-21 14:20:14.290522899 -0400
-+++ memcpu.hex	2024-03-21 14:20:14.272522251 -0400
+--- memsim.hex	2024-03-21 14:34:40.081707715 -0400
++++ memcpu.hex	2024-03-21 14:34:40.059706922 -0400
 @@ -81,134 +81,134 @@
  :040050000800004A5A
  :0400510003E00008C0
