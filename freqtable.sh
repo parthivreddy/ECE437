@@ -9,12 +9,12 @@ do
    sed -r "s|LAT = [0-9]+|LAT = $ram_lat|1" source/ram.sv | cat > temp_ram
    cat temp_ram > source/ram.sv
    rm temp_ram
-   synthesize -t -f 200 system
+   synthesize -t -f 60 system
    echo "Frequency table for LAT = $ram_lat 85C Model" >> $fname
    grep -A 7 "Slow 1200mV 85C Model Fmax Summary" ._system/system.sta.rpt | tail -n7 >> $fname
 
    make clean
-   asm asmFiles/mergesort.asm
+   asm asmFiles/mult.asm
    make system
    make system.sim > synRunResults.txt
 
