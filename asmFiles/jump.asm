@@ -15,8 +15,6 @@ ori  $3, $3, 0xFF00
 ori $5, $0, 0xFF08
 
 
-
-
 jal next
 add  $2, $3, $0
 
@@ -27,8 +25,6 @@ nextnext:
     halt
     sw $1, 8($3)
     halt
-
-
 
 next:
     sw $31, 0($3)

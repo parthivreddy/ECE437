@@ -63,6 +63,17 @@ module dcache(
     //     end
     // end
 
+    // always_ff @(posedge CLK, negedge nRST) begin : address
+    //     if(!nRST)
+    //     begin
+    //         dmemaddrFF <= 0;
+    //     end
+    //     else if (currState == IDLE)
+    //     begin
+    //         dmemaddrFF <= dcif.dmemaddr;
+    //     end
+    // end
+
     always_comb begin : CMBLGC
         nState = currState;
         ndcache = dcache;
@@ -94,6 +105,7 @@ module dcache(
                 begin
                     nState = ENDWR1;
                 end
+                else if(dcif.dmemREN || dcif.dmemWEN)
                 else if(dcif.dmemREN || dcif.dmemWEN)
                 begin
                     if(dcache[0][addr.idx].valid && dcache[0][addr.idx].tag == addr.tag)
@@ -161,6 +173,8 @@ module dcache(
                     nState = ALLOCATE2;
                     // dcif.dhit = 1;
                     // nState = IDLE;
+                    // dcif.dhit = 1;
+                    // nState = IDLE;
                 end
             end
             ALLOCATE2:
@@ -175,10 +189,13 @@ module dcache(
                     nLRU[addr.idx] = ~LRU[addr.idx];
                     nState = IDLE;
                     // nState = ALLOCATE2;
+                    // nState = ALLOCATE2;
                 end
                 else
                 begin
                     cif.dREN = 1;
+                    // cif.daddr = dmemaddrFF;
+                    cif.daddr = dcif.dmemaddr;
                     // cif.daddr = dmemaddrFF;
                     cif.daddr = dcif.dmemaddr;
                     if(!cif.dwait)
@@ -191,6 +208,7 @@ module dcache(
                         nLRU[addr.idx] = ~LRU[addr.idx];
                         dcif.dmemload = cif.dload;
                         nState = IDLE;
+                        // nState = ALLOCATE2;
                         // nState = ALLOCATE2;
                     end
 
