@@ -1,0 +1,37 @@
+Frequency Sweep Report File 2024_03_21_03_09_PM
+Frequency table for LAT = 0 85C Model
++------------+-----------------+---------------------+------+
+; Fmax       ; Restricted Fmax ; Clock Name          ; Note ;
++------------+-----------------+---------------------+------+
+; 52.88 MHz  ; 52.88 MHz       ; CPUCLK              ;      ;
+; 83.95 MHz  ; 83.95 MHz       ; altera_reserved_tck ;      ;
+; 143.51 MHz ; 143.51 MHz      ; CLK                 ;      ;
++------------+-----------------+---------------------+------+
+# Halted at 377560 time and ran for      18877 cycles.
+Frequency table for LAT = 2 85C Model
++------------+-----------------+---------------------+------+
+; Fmax       ; Restricted Fmax ; Clock Name          ; Note ;
++------------+-----------------+---------------------+------+
+; 48.78 MHz  ; 48.78 MHz       ; CPUCLK              ;      ;
+; 77.26 MHz  ; 77.26 MHz       ; altera_reserved_tck ;      ;
+; 111.88 MHz ; 111.88 MHz      ; CLK                 ;      ;
++------------+-----------------+---------------------+------+
+# Halted at 403040 time and ran for      20151 cycles.
+Frequency table for LAT = 6 85C Model
++------------+-----------------+---------------------+------+
+; Fmax       ; Restricted Fmax ; Clock Name          ; Note ;
++------------+-----------------+---------------------+------+
+; 54.24 MHz  ; 54.24 MHz       ; CPUCLK              ;      ;
+; 67.86 MHz  ; 67.86 MHz       ; altera_reserved_tck ;      ;
+; 148.63 MHz ; 148.63 MHz      ; CLK                 ;      ;
++------------+-----------------+---------------------+------+
+# Halted at 455440 time and ran for      22771 cycles.
+Frequency table for LAT = 10 85C Model
++------------+-----------------+---------------------+------+
+; Fmax       ; Restricted Fmax ; Clock Name          ; Note ;
++------------+-----------------+---------------------+------+
+; 53.05 MHz  ; 53.05 MHz       ; CPUCLK              ;      ;
+; 71.47 MHz  ; 71.47 MHz       ; altera_reserved_tck ;      ;
+; 146.82 MHz ; 146.82 MHz      ; CLK                 ;      ;
++------------+-----------------+---------------------+------+
+# Halted at 507840 time and ran for      25391 cycles.

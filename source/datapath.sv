@@ -102,7 +102,7 @@ module datapath (
         stage3 <= 0;
         stage4 <= 0;
     end
-    else if(dpif.ihit)
+    else if(dpif.ihit && !huif.stall_all)
     begin
         stage1 <= nstage1;
         stage2 <= nstage2;

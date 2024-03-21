@@ -1,6 +1,6 @@
 make[1]: Entering directory `/home/ecegrid/a/mg257/ece437/processors'
 
-Hello mg257@cparch16.ecn.purdue.edu, you forgot some targets.
+Hello mg257@cparch23.ecn.purdue.edu, you forgot some targets.
 	If you need instructions to use this Makefile:
 		'make <module_name>' to build module
 		'make <module_name>_tb' to build module + testbench
@@ -22,7 +22,7 @@ Hello mg257@cparch16.ecn.purdue.edu, you forgot some targets.
 make[1]: Leaving directory `/home/ecegrid/a/mg257/ece437/processors'
 vlog  +acc -sv12compat -mfcu -lint +incdir+include -suppress 12110  testbench/system_tb.sv
 QuestaSim vlog 10.7a Compiler 2018.03 Mar 26 2018
-Start time: 13:50:04 on Mar 19,2024
+Start time: 15:36:42 on Mar 21,2024
 vlog "+acc" -sv12compat -mfcu -lint "+incdir+include" -suppress 12110 testbench/system_tb.sv 
 -- Compiling package cpu_types_pkg
 -- Compiling interface system_if
@@ -32,7 +32,7 @@ vlog "+acc" -sv12compat -mfcu -lint "+incdir+include" -suppress 12110 testbench/
 
 Top level modules:
 	system_tb
-End time: 13:50:04 on Mar 19,2024, Elapsed time: 0:00:00
+End time: 15:36:42 on Mar 21,2024, Elapsed time: 0:00:00
 Errors: 0, Warnings: 0
 Reading pref.tcl
 
@@ -45,7 +45,7 @@ Reading pref.tcl
 # ** Warning: Multiple occurences of ini variable ToggleWidthLimit are found, only first occurence will be considered.
 # ** Warning: Multiple occurences of ini variable ToggleWidthLimit are found, only first occurence will be considered.
 # vsim -coverage -suppress 12110 -c -do "run -all; exit;" -L altera_mf_ver -L altera_ver -L cycloneive_ver -wlf system_tb.wlf work.system_tb 
-# Start time: 13:50:05 on Mar 19,2024
+# Start time: 15:36:43 on Mar 21,2024
 # ** Note: (vsim-3812) Design is being optimized...
 # ** Note: (vopt-143) Recognized 1 FSM in module "dcache(fast)".
 ###### include/cache_control_if.vh(79):       iREN[1] = cif1.iREN;
@@ -120,8 +120,8 @@ Reading pref.tcl
 # Loading altera_mf_ver.altsyncram(fast)
 # run -all
 # Starting Processor.
-# Halted at 4080 time and ran for        203 cycles.
+# Halted at 507840 time and ran for      25391 cycles.
 # Starting memory dump.
 # Finished memory dump.
-# End time: 13:50:06 on Mar 19,2024, Elapsed time: 0:00:01
+# End time: 15:36:45 on Mar 21,2024, Elapsed time: 0:00:02
 # Errors: 0, Warnings: 15
