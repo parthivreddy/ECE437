@@ -14,6 +14,7 @@ module hazard_unit (
         huif.flush2 = 0;
         huif.flush3 = 0;
         huif.stall = 0;
+        huif.stall_all = 0;
 
 
         // load hazard
@@ -23,7 +24,12 @@ module hazard_unit (
         //  stall the pipeline
 
         //maybe stall pipeline for JR
-        if ((huif.stage2_MemRead && !huif.branch) && 
+        if((huif.stage3_MemRead || huif.stage3_MemWrite))
+        begin
+            huif.stall_all = 1;
+        end
+
+        else if ((huif.stage2_MemRead && !huif.branch) && 
             ((huif.stage2_rt == huif.stage1_rs) ||
             (huif.stage2_rt == huif.stage1_rt))) begin
 

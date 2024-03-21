@@ -79,8 +79,10 @@ module datapath (
   assign huif.stage1_rt = rt;
   assign huif.stage2_rt = stage2.rt;
   assign huif.stage2_MemRead = stage2.MemRead;
-  assign huif.stage3_MemRead = stage3.MemRead;
-  assign huif.stage3_MemWrite = stage3.MemWrite;
+  assign huif.stage3_MemRead = dpif.dmemREN;
+  assign huif.stage3_MemWrite = dpif.dmemWEN;
+  assign huif.ihit = dpif.ihit;
+
 
   //Forward Unit inputs
   assign fuif.stage2_rs = stage2.rs;
@@ -116,7 +118,7 @@ module datapath (
     begin
         nstage1 = 0;
     end
-    else if(!huif.stall)
+    else if(!huif.stall && !huif.stall_all)
     begin
         nstage1.PC_plus_four = PC + 4;
         nstage1.instruction = dpif.imemload;
@@ -130,7 +132,7 @@ module datapath (
     begin
         nstage2 = 0;
     end
-    else
+    else if(!huif.stall_all)
     begin
         nstage2.PC_plus_four = stage1.PC_plus_four;
         nstage2.rdat1 = rfif.rdat1;
@@ -176,7 +178,7 @@ module datapath (
     begin
         nstage3 = 0;
     end
-    else
+    else if(!huif.stall_all)
     begin
         nstage3.PC_plus_four = stage2.PC_plus_four;
         nstage3.rdat1 = stage2.rdat1;
@@ -255,7 +257,7 @@ always_comb begin : STG4
     begin
         nstage4 = 0;
     end
-    else
+    else if(!huif.stall_all)
     begin
         //nstage4.dmemload = dpif.dmemload; //CHANGE BACK
         nstage4.dmemload = dmemFF;
@@ -297,17 +299,17 @@ always_ff @(posedge CLK, negedge nRST) begin : RQFF
         dpif.dmemREN <= 0;
         dpif.dmemWEN <= 0;
     end
-    else if(dpif.ihit)
-    begin
-      // dpif.dmemREN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemRead);
-      // dpif.dmemWEN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemWrite);
-        dpif.dmemREN <= dpif.halt ? 0 : stage2.MemRead;
-        dpif.dmemWEN <= dpif.halt ? 0 : stage2.MemWrite;
-    end
     else if(dpif.dhit || (stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
     begin
         dpif.dmemREN <= 0;
         dpif.dmemWEN <= 0;
+    end
+    else if(dpif.ihit)
+    begin
+      // dpif.dmemREN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemRead);
+      // dpif.dmemWEN <= dpif.halt ? 0 : (huif.set2 ? 0 : stage2.MemWrite);
+        dpif.dmemREN <= dpif.halt ? 0 : (stage2.MemRead | dpif.dmemREN); //want to keep latched until we see dhit
+        dpif.dmemWEN <= dpif.halt ? 0 : (stage2.MemWrite | dpif.dmemWEN);
     end
 end
 assign dpif.imemREN = dpif.halt ? 0 : 1;
@@ -456,7 +458,7 @@ always_ff @(posedge CLK, negedge nRST) begin : PCFF
         PC <= PC_INIT;
         dpif.halt <= 0;
     end
-    else if(dpif.ihit && !huif.stall)
+    else if(dpif.ihit && !huif.stall && !huif.stall_all)
     begin
         PC <= nPC; //stage4.PC_result
         dpif.halt <= (dpif.halt | stage3.halt);
@@ -469,7 +471,7 @@ end
 
 always_comb begin : PCUPDT
     nPC = PC;
-    if(prog && !huif.stall)
+    if(dpif.ihit && !huif.stall && !huif.stall_all)
     begin
         if((stage3.Beq && stage3.zero) || (stage3.Bne && !stage3.zero))
         begin
