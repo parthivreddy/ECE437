@@ -18,6 +18,7 @@ module dcache(
     logic [31:0] hit_counter, nhit_counter, ndaddr, ndstore;
     logic ndWEN, ndREN, dmemRENFF;
     logic equal;
+    logic WENfirst, RENfirst;
     //logic cif.dwait;
 
     dcachef_t addr, oldaddr;
@@ -33,7 +34,10 @@ module dcache(
     // assign WBequal = cif.daddr == {oldaddr.tag, addr.idx, addr.blkoff, addr.bytoff};
     // assign toggleWBequal = cif.daddr == {oldaddr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
 
+    typedef enum logic [1:0] {IDLEfirst, REN, WEN} firstState; //just to see which came first
     typedef enum logic [3:0] {IDLE, COMPARE, WB1, WB2, ALLOCATE1, ALLOCATE2, OUTPUT, ENDWR1, ENDWR2, INCRCNT, WCOUNT, HALT} state;
+
+    firstState firstSt, nfirstSt;
 
     state currState;
     state nState;
@@ -42,6 +46,7 @@ module dcache(
         if(!nRST)
         begin
             currState <= IDLE;
+            firstSt <= IDLEfirst;
             dcache <= '0;
             LRU <= '0;
             index <= 0;
@@ -57,6 +62,7 @@ module dcache(
         else
         begin
             currState <= nState;
+            firstSt <= nfirstSt;
             dcache <= ndcache;
             LRU <= nLRU;
             index <= nIndex;
@@ -69,6 +75,43 @@ module dcache(
             dmemRENFF <= dcif.dmemREN;
             //cif.dwait <= cif.dwait;
         end
+    end
+
+    always_comb
+    begin
+        nfirstSt = firstSt;
+        WENfirst = 0;
+        RENfirst = 0;
+        case(firstSt)
+            IDLEfirst:
+            begin
+                if(dcif.dmemREN)
+                begin
+                    nfirstSt = REN;
+                end
+                else if(dcif.dmemWEN)
+                begin
+                    nfirstSt = WEN;
+                end
+            end
+            REN:
+            begin
+                RENfirst = 1;
+                if(!dcif.dmemREN)
+                begin
+                    nfirstSt = IDLEfirst;
+                end
+            end
+            WEN:
+            begin
+                WENfirst = 1;
+                if(!dcif.dmemWEN)
+                begin
+                    //WENfirst = 0;
+                    nfirstSt = IDLEfirst;
+                end
+            end
+        endcase
     end
 
     // always_ff @(posedge CLK, negedge nRST) begin : address
@@ -172,7 +215,7 @@ module dcache(
             begin
                 //this causes issues with WAR
                 //if no flip-flopped REN then dmemWEN is first
-                if(dcif.dmemWEN && !dmemRENFF)
+                if(dcif.dmemWEN && WENfirst)
                 begin
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
                     ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = dcif.dmemstore;

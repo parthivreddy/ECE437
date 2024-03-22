@@ -74,7 +74,6 @@ add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/ndWEN
 add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/ndstore
 add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/ndaddr
 add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/dmemRENFF
-add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/dmemWENFF
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramREN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramWEN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramaddr
@@ -104,6 +103,10 @@ add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/oldaddr
 add wave -noupdate -expand -group DCACHE -expand /system_tb/DUT/CPU/CM/DCACHE/addr
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/currState
 add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nState
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nfirstSt
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/RENfirst
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/WENfirst
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/firstSt
 add wave -noupdate -divider Stages
 add wave -noupdate -group stage1/IF_ID /system_tb/DUT/CPU/DP/stage1.PC_plus_four
 add wave -noupdate -group stage1/IF_ID /system_tb/DUT/CPU/DP/stage1.instruction
@@ -178,7 +181,7 @@ add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage4_RegWr
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardA
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardB
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {165012 ps} 0}
+WaveRestoreCursors {{Cursor 1} {85218 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
