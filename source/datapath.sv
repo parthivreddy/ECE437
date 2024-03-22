@@ -118,7 +118,7 @@ module datapath (
     begin
         nstage1 = 0;
     end
-    else if(!huif.stall && !huif.stall_all)
+    else if(!huif.stall)
     begin
         nstage1.PC_plus_four = PC + 4;
         nstage1.instruction = dpif.imemload;
@@ -132,7 +132,7 @@ module datapath (
     begin
         nstage2 = 0;
     end
-    else if(!huif.stall_all)
+    else
     begin
         nstage2.PC_plus_four = stage1.PC_plus_four;
         nstage2.rdat1 = rfif.rdat1;
@@ -178,7 +178,7 @@ module datapath (
     begin
         nstage3 = 0;
     end
-    else if(!huif.stall_all)
+    else
     begin
         nstage3.PC_plus_four = stage2.PC_plus_four;
         nstage3.rdat1 = stage2.rdat1;
@@ -257,7 +257,7 @@ always_comb begin : STG4
     begin
         nstage4 = 0;
     end
-    else if(!huif.stall_all)
+    else
     begin
         //nstage4.dmemload = dpif.dmemload; //CHANGE BACK
         nstage4.dmemload = dmemFF;

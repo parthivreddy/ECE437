@@ -16,8 +16,8 @@ module dcache(
     logic endSet, nEndSet;
     logic [2:0] index, nIndex;
     logic [31:0] hit_counter, nhit_counter, ndaddr, ndstore;
-    logic ndWEN, ndREN, dmemRENFF;
-    logic equal;
+    logic ndWEN, ndREN, dmemRENFF, dmemWENFF;
+    logic miss;
     //logic cif.dwait;
 
     dcachef_t addr, oldaddr;
@@ -28,6 +28,7 @@ module dcache(
     assign addr.tag = dcif.dmemaddr[31:6];
 
     assign oldaddr.tag = dcache[LRU[addr.idx]][addr.idx].tag;
+
     // assign equal = cif.daddr == dcif.dmemaddr;
     // assign toggleEqual = {cif.daddr[31:3], ~cif.daddr[2], cif.daddr[1:0]} == dcif.dmemaddr;
     // assign WBequal = cif.daddr == {oldaddr.tag, addr.idx, addr.blkoff, addr.bytoff};
@@ -51,7 +52,8 @@ module dcache(
             cif.dstore <= 0;
             cif.dWEN <= 0;
             cif.dREN <= 0;
-            dmemRENFF <= 0;
+            // dmemRENFF <= 0;
+            // dmemWENFF <= 0;
             //cif.dwait <= 0;
         end
         else
@@ -66,7 +68,8 @@ module dcache(
             cif.dstore <= ndstore;
             cif.dWEN <= ndWEN;
             cif.dREN <= ndREN;
-            dmemRENFF <= dcif.dmemREN;
+            // dmemRENFF <= miss ? dcif.dmemREN | dmemRENFF : 0;
+            // dmemWENFF <= miss ? dcif.dmemWEN | dmemWENFF : 0;
             //cif.dwait <= cif.dwait;
         end
     end
@@ -99,6 +102,7 @@ module dcache(
         dcif.dmemload = 0;
         dcif.flushed = 0;
 
+        miss = 1;
         
 
         // if(!dcif.dmemREN && !dcif.dmemWEN)
@@ -119,6 +123,7 @@ module dcache(
                 begin
                     if(dcache[0][addr.idx].valid && dcache[0][addr.idx].tag == addr.tag)
                     begin
+                        miss = 0;
                         dcif.dhit = 1;
                         dcif.dmemload = dcache[0][addr.idx].data[addr.blkoff];
                         ndcache[0][addr.idx].dirty = dcif.dmemWEN ? 1 : dcache[0][addr.idx].dirty; //might not need this line
@@ -128,6 +133,7 @@ module dcache(
                     end
                     else if(dcache[1][addr.idx].valid && dcache[1][addr.idx].tag == addr.tag)
                     begin
+                        miss = 0;
                         dcif.dhit = 1;
                         dcif.dmemload = dcache[1][addr.idx].data[addr.blkoff];
                         ndcache[1][addr.idx].dirty = dcif.dmemWEN ? 1 : dcache[1][addr.idx].dirty;
@@ -138,10 +144,12 @@ module dcache(
                     //Misses
                     else if(dcache[LRU[addr.idx]][addr.idx].dirty)
                     begin
+                        //miss = 1;
                         nState = WB1;
                     end
                     else
                     begin
+                        //miss = 1;
                         nState = ALLOCATE1;
                     end
                 end
@@ -149,6 +157,7 @@ module dcache(
             WB1: //writing LRU data into RAM
             begin
                 // cif.daddr = dmemaddrFF;
+                //miss = 1;
                 ndaddr = {oldaddr.tag, addr.idx, addr.blkoff, addr.bytoff};
                 ndstore = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
                 ndWEN = 1;
@@ -159,6 +168,7 @@ module dcache(
             end
             WB2:
             begin
+                //miss = 1;
                 ndaddr = {oldaddr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
                 ndstore = dcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff];
                 ndWEN = 1;
@@ -170,22 +180,40 @@ module dcache(
             ALLOCATE1: //Taking RAM data and putting it into LRU cache
             //Swap ALLOCATE1 and ALLOCATE2
             begin
-                //this causes issues with WAR
-                //if no flip-flopped REN then dmemWEN is first
-                if(dcif.dmemWEN && !dmemRENFF)
+                //need to wait for RAM
+                //miss = 1;
+                ndREN = 1;
+                ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
+                if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
+                begin
+                    ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
+                    ndcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff] = cif.dload;
+                    ndcache[LRU[addr.idx]][addr.idx].valid = 1;
+                    ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
+                    nState = ALLOCATE2;
+                    // dcif.dhit = 1;
+                    // nState = IDLE;
+                end
+            end
+            ALLOCATE2:
+            begin
+                if(dcif.dmemWEN)
                 begin
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
                     ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = dcif.dmemstore;
                     ndcache[LRU[addr.idx]][addr.idx].valid = 1;
                     ndcache[LRU[addr.idx]][addr.idx].dirty = 1;
-                    //dcif.dhit = 1;
-                    //nLRU[addr.idx] = ~LRU[addr.idx];
-                    nState = ALLOCATE2;
+                    dcif.dhit = 1;
+                    miss = 0;
+                    nLRU[addr.idx] = ~LRU[addr.idx];
+                    nState = IDLE;
+                    // nState = ALLOCATE2;
                 end
-                //need to wait for RAM
                 else
                 begin
+                    miss = 1;
                     ndREN = 1;
+                    // cif.daddr = dmemaddrFF;
                     ndaddr = dcif.dmemaddr;
                     if(!cif.dwait && cif.daddr == dcif.dmemaddr)
                     begin
@@ -193,28 +221,14 @@ module dcache(
                         ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = cif.dload;
                         ndcache[LRU[addr.idx]][addr.idx].valid = 1;
                         ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
-                        nState = ALLOCATE2;
-                        // dcif.dhit = 1;
-                        // nState = IDLE;
+                        dcif.dhit = 1;
+                        miss = 0;
+                        nLRU[addr.idx] = ~LRU[addr.idx];
+                        dcif.dmemload = cif.dload;
+                        nState = IDLE;
+                        // nState = ALLOCATE2;
                     end
-                end
-            end
-            ALLOCATE2:
-            begin
-                ndREN = 1;
-                // cif.daddr = dmemaddrFF;
-                ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
-                if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
-                begin
-                    ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
-                    ndcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff] = cif.dload;
-                    ndcache[LRU[addr.idx]][addr.idx].valid = 1;
-                    ndcache[LRU[addr.idx]][addr.idx].dirty = dcache[LRU[addr.idx]][addr.idx].dirty;
-                    dcif.dhit = 1;
-                    dcif.dmemload = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
-                    nLRU[addr.idx] = ~LRU[addr.idx];
-                    nState = IDLE;
-                    // nState = ALLOCATE2;
+
                 end
             end
             ENDWR1:
@@ -224,7 +238,7 @@ module dcache(
                     ndWEN = 1;
                     ndaddr = {dcache[endSet][index].tag, index, 3'b0};
                     ndstore = dcache[endSet][index].data[0];
-                    if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 3'b0} && cif.dWEN)
+                    if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 3'b0})
                     begin
                         nState = ENDWR2;
                     end
@@ -243,7 +257,7 @@ module dcache(
                 ndWEN = 1;
                 ndaddr = {dcache[endSet][index].tag, index, 1'b1, 2'b0};
                 ndstore = dcache[endSet][index].data[1];
-                if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 1'b1, 2'b0} && cif.dWEN)
+                if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 1'b1, 2'b0})
                 begin
                     nState = INCRCNT;
                 end

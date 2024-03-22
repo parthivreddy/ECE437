@@ -16,7 +16,7 @@ module dcache(
     logic endSet, nEndSet;
     logic [2:0] index, nIndex;
     logic [31:0] hit_counter, nhit_counter, ndaddr, ndstore;
-    logic ndWEN, ndREN, dmemRENFF;
+    logic ndWEN, ndREN;
     logic equal;
     //logic cif.dwait;
 
@@ -51,7 +51,6 @@ module dcache(
             cif.dstore <= 0;
             cif.dWEN <= 0;
             cif.dREN <= 0;
-            dmemRENFF <= 0;
             //cif.dwait <= 0;
         end
         else
@@ -66,7 +65,6 @@ module dcache(
             cif.dstore <= ndstore;
             cif.dWEN <= ndWEN;
             cif.dREN <= ndREN;
-            dmemRENFF <= dcif.dmemREN;
             //cif.dwait <= cif.dwait;
         end
     end
@@ -170,16 +168,14 @@ module dcache(
             ALLOCATE1: //Taking RAM data and putting it into LRU cache
             //Swap ALLOCATE1 and ALLOCATE2
             begin
-                //this causes issues with WAR
-                //if no flip-flopped REN then dmemWEN is first
-                if(dcif.dmemWEN && !dmemRENFF)
+                if(dcif.dmemWEN)
                 begin
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
                     ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = dcif.dmemstore;
                     ndcache[LRU[addr.idx]][addr.idx].valid = 1;
                     ndcache[LRU[addr.idx]][addr.idx].dirty = 1;
-                    //dcif.dhit = 1;
-                    //nLRU[addr.idx] = ~LRU[addr.idx];
+                    dcif.dhit = 1;
+                    nLRU[addr.idx] = ~LRU[addr.idx];
                     nState = ALLOCATE2;
                 end
                 //need to wait for RAM
@@ -209,10 +205,10 @@ module dcache(
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
                     ndcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff] = cif.dload;
                     ndcache[LRU[addr.idx]][addr.idx].valid = 1;
-                    ndcache[LRU[addr.idx]][addr.idx].dirty = dcache[LRU[addr.idx]][addr.idx].dirty;
+                    ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
                     dcif.dhit = 1;
-                    dcif.dmemload = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
                     nLRU[addr.idx] = ~LRU[addr.idx];
+                    dcif.dmemload = cif.dload;
                     nState = IDLE;
                     // nState = ALLOCATE2;
                 end
@@ -224,7 +220,7 @@ module dcache(
                     ndWEN = 1;
                     ndaddr = {dcache[endSet][index].tag, index, 3'b0};
                     ndstore = dcache[endSet][index].data[0];
-                    if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 3'b0} && cif.dWEN)
+                    if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 3'b0})
                     begin
                         nState = ENDWR2;
                     end
@@ -243,7 +239,7 @@ module dcache(
                 ndWEN = 1;
                 ndaddr = {dcache[endSet][index].tag, index, 1'b1, 2'b0};
                 ndstore = dcache[endSet][index].data[1];
-                if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 1'b1, 2'b0} && cif.dWEN)
+                if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 1'b1, 2'b0})
                 begin
                     nState = INCRCNT;
                 end

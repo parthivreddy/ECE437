@@ -69,6 +69,12 @@ add wave -noupdate -expand -group MemControl -color Gold /system_tb/DUT/CPU/cif0
 add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/dload
 add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/dstore
 add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/cif0/daddr
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/ndREN
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/ndWEN
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/ndstore
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/ndaddr
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/dmemRENFF
+add wave -noupdate -expand -group MemControl /system_tb/DUT/CPU/CM/DCACHE/dmemWENFF
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramREN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramWEN
 add wave -noupdate -group RAM /system_tb/DUT/RAM/ramif/ramaddr
@@ -85,19 +91,19 @@ add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/ncache
 add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/addr
 add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/currState
 add wave -noupdate -group ICACHE /system_tb/DUT/CPU/CM/ICACHE/nState
-add wave -noupdate -group DCACHE -expand -subitemconfig {{/system_tb/DUT/CPU/CM/DCACHE/dcache[1]} -expand {/system_tb/DUT/CPU/CM/DCACHE/dcache[0]} -expand} /system_tb/DUT/CPU/CM/DCACHE/dcache
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/ndcache
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/LRU
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nLRU
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/endSet
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/index
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nIndex
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/hit_counter
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nhit_counter
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/oldaddr
-add wave -noupdate -group DCACHE -expand /system_tb/DUT/CPU/CM/DCACHE/addr
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/currState
-add wave -noupdate -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nState
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/dcache
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/ndcache
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/LRU
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nLRU
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/endSet
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/index
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nIndex
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/hit_counter
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nhit_counter
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/oldaddr
+add wave -noupdate -expand -group DCACHE -expand /system_tb/DUT/CPU/CM/DCACHE/addr
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/currState
+add wave -noupdate -expand -group DCACHE /system_tb/DUT/CPU/CM/DCACHE/nState
 add wave -noupdate -divider Stages
 add wave -noupdate -group stage1/IF_ID /system_tb/DUT/CPU/DP/stage1.PC_plus_four
 add wave -noupdate -group stage1/IF_ID /system_tb/DUT/CPU/DP/stage1.instruction
@@ -172,7 +178,7 @@ add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/stage4_RegWr
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardA
 add wave -noupdate -group {forward unit} /system_tb/DUT/CPU/DP/fuif/forwardB
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {16360000 ps} 0}
+WaveRestoreCursors {{Cursor 1} {165012 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -188,4 +194,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {16227500 ps} {16492500 ps}
+WaveRestoreZoom {0 ps} {265 ns}

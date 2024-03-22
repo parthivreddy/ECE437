@@ -224,7 +224,7 @@ module dcache(
                     ndWEN = 1;
                     ndaddr = {dcache[endSet][index].tag, index, 3'b0};
                     ndstore = dcache[endSet][index].data[0];
-                    if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 3'b0} && cif.dWEN)
+                    if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 3'b0})
                     begin
                         nState = ENDWR2;
                     end
@@ -243,7 +243,7 @@ module dcache(
                 ndWEN = 1;
                 ndaddr = {dcache[endSet][index].tag, index, 1'b1, 2'b0};
                 ndstore = dcache[endSet][index].data[1];
-                if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 1'b1, 2'b0} && cif.dWEN)
+                if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 1'b1, 2'b0})
                 begin
                     nState = INCRCNT;
                 end
