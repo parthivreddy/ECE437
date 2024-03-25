@@ -22,12 +22,12 @@ module memory_control_tb;
     ram DUT0(CLK, nRST, ramif);
     memory_control DUT1(CLK, nRST, ccif);
 
-    // assign ramif.ramstore = ccif.ramstore;
-    // assign ramif.ramaddr = ccif.ramaddr;
-    // assign ramif.ramWEN = ccif.ramWEN;
-    // assign ramif.ramREN = ccif.ramREN;
-    // assign ccif.ramload = ramif.ramload;
-    // assign ccif.ramstate = ramif.ramstate;
+    assign ramif.ramstore = ccif.ramstore;
+    assign ramif.ramaddr = ccif.ramaddr;
+    assign ramif.ramWEN = ccif.ramWEN;
+    assign ramif.ramREN = ccif.ramREN;
+    assign ccif.ramload = ramif.ramload;
+    assign ccif.ramstate = ramif.ramstate;
 
 endmodule
 
@@ -43,16 +43,10 @@ string testType;
 integer testNum = 0;
 string res;
 
-task instReqC0;
+task instReq;
     input [31:0] addr;
     cif0.iREN = 1;
     cif0.iaddr = addr;
-endtask
-
-task instReqC1;
-    input [31:0] addr;
-    cif1.iREN = 1;
-    cif1.iaddr = addr;
 endtask
 
 task dataRead;
@@ -70,32 +64,15 @@ task dataWrite;
     cif0.dstore = storeVal;
 endtask
 
-task reset_C0;
-    res = "core 0 reset";
+task reset;
+    res = "in reset";
     cif0.dREN = 0;
     cif0.dWEN = 0;
-    cif0.dstore = 0;
-    cif0.iaddr = 0;
     cif0.daddr = 0;
-    cif0.iREN = 1;
-    cif0.ccwrite = 0;
-    cif0.cctrans = 0;
 endtask
 
-task reset_C1;
-    res = "core 1 reset";
-    cif1.dREN = 0;
-    cif1.dWEN = 0;
-    cif1.dstore = 0;
-    cif1.iaddr = 0;
-    cif1.daddr = 0;
-    cif1.iREN = 1;
-    cif1.ccwrite = 0;
-    cif1.cctrans = 0;
-endtask
-
-task automatic dump_memory_0();
-    string filename = "memcpuC0.hex";
+task automatic dump_memory();
+    string filename = "memcpu.hex";
     int memfd;
 
     //syif.tbCTRL = 1;
@@ -139,14 +116,14 @@ task automatic dump_memory_0();
     end
   endtask
 
-task automatic dump_memory_1();
-    string filename = "memcpuC1.hex";
+task automatic dump_memory2();
+    string filename = "memcpu2.hex";
     int memfd;
 
     //syif.tbCTRL = 1;
-    cif1.daddr = 0;
-    cif1.dWEN = 0;
-    cif1.dREN = 0;
+    cif0.daddr = 0;
+    cif0.dWEN = 0;
+    cif0.dREN = 0;
 
     memfd = $fopen(filename,"w");
     if (memfd)
@@ -160,22 +137,22 @@ task automatic dump_memory_1();
       bit [7:0][7:0] values;
       string ihex;
 
-      cif1.daddr = i << 2;
-      cif1.dREN = 1;
+      cif0.daddr = i << 2;
+      cif0.dREN = 1;
       repeat (4) @(posedge CLK);
-      if (cif1.dload === 0)
+      if (cif0.dload === 0)
         continue;
-      values = {8'h04,16'(i),8'h00,cif1.dload};
+      values = {8'h04,16'(i),8'h00,cif0.dload};
       foreach (values[j])
         chksum += values[j];
       chksum = 16'h100 - chksum;
-      ihex = $sformatf(":04%h00%h%h",16'(i),cif1.dload,8'(chksum));
+      ihex = $sformatf(":04%h00%h%h",16'(i),cif0.dload,8'(chksum));
       $fdisplay(memfd,"%s",ihex.toupper());
     end //for
     if (memfd)
     begin
       //syif.tbCTRL = 0;
-      cif1.dREN = 0;
+      cif0.dREN = 0;
       $fdisplay(memfd,":00000001FF");
       $fclose(memfd);
       $display("Finished memory dump.");
@@ -184,99 +161,60 @@ task automatic dump_memory_1();
 
 initial begin
     nRST = 1;
-    // inputs to controller
+    //dump_memory();
+    nRST = 1;
     cif0.dREN = 0;
     cif0.dWEN = 0;
     cif0.dstore = 0;
     cif0.iaddr = 0;
     cif0.daddr = 0;
     cif0.iREN = 1;
-    cif0.ccwrite = 0;
-    cif0.cctrans = 0;
-
-    cif1.dREN = 0;
-    cif1.dWEN = 0;
-    cif1.dstore = 0;
-    cif1.iaddr = 0;
-    cif1.daddr = 0;
-    cif1.iREN = 1;
-    cif1.ccwrite = 0;
-    cif1.cctrans = 0;
-
+    //dump_memory();
+    // nRST = 1;
+    // cif0.dREN = 0;
+    // cif0.dWEN = 0;
+    // cif0.dstore = 0;
+    // cif0.iaddr = 0;
+    // cif0.daddr = 0;
+    // cif0.iREN = 1;
 
     //TEST CASE 1
-    testType = "Regular Instructions";
-    instReqC0(32'h01234567);
+    testType = "Regular Instruction";
+    instReq(32'h01234567);
     #(4*PERIOD);
-    reset_C0();
-    instReqC1(32'h87654321);
-    #(4*PERIOD);
-    reset_C1();
     
     //TEST CASE 2
-    testType = "C0 I->S, C1 S->S || I->I";
-    cif0.dREN = 1;
-    cif0.daddr = 32'h8000;
-    #(2*PERIOD); //ccsnoopaddr should be valid
-    cif1.cctrans = 1;
-    #(2*PERIOD);
-    cif1.cctrans = 0;
-    #(5*PERIOD);
-    reset_C0();
+
+
 
     //TEST CASE 3
-    testType = "C0 I->S, C1 M->S";
-    cif0.dREN = 1;
-    cif0.daddr = 32'h8000;
-    #(2*PERIOD); //ccsnoopaddr should be valid
-    cif1.cctrans = 1;
-    #(2*PERIOD);
-    cif1.dWEN = 1; //core 1 writing back
-    #(10*PERIOD);
-    reset_C0();
-    reset_C1();
+    testType = "Store from RAM";
+    instReq(32'h00000003);
+    #(PERIOD);
+    dataWrite(32'h00000004, 44); //write 44 to address 4 in RAM
+    #(4*PERIOD);
+    reset();
+    #(PERIOD);
+    res = "not in reset";
+    
 
+    testType = "LOAD from RAM";
+    instReq(32'h00000001); //request instruction from address 5
+    #(PERIOD);
+    dataRead(32'h00000004); //request data from address 4
+    #(4*PERIOD);
+    reset();
+    #(PERIOD);
+    res = "not in reset";
+    //dump_memory2();
 
-    //TEST CASE 4
-    testType = "C0 I->M, C1 S->I || I->I";
-    cif0.dREN = 1;
-    cif0.daddr = 32'hFFFF;
-    cif0.ccwrite = 1;
-    #(2*PERIOD); //ccsnoopaddr should be valid
-    cif1.trans = 1;
-    #(2*PERIOD);
-    #(5*PERIOD);
-    reset_C0();
-    reset_C1();
-
-    //TEST CASE 5
-    testType = "C0 I->M, C1 M->I";
-    cif0.dREN = 1;
-    cif0.daddr = 32'hFFFF;
-    cif0.ccwrite = 1;
-    #(2*PERIOD); //ccsnoopaddr should be valid
-    cif1.trans = 1;
-    #(2*PERIOD);
-    cif1.dWEN = 1;
-    #(2*PERIOD);
-    cif1.dWEN = 0;
-    cif1.trans = 0;
-    #(5*PERIOD);
-    reset_C0();
-    reset_C1();
-
-    //TEST CASE 6
-    testType = "C0 S->M, C1 S->I || I->I";
-    cif0.daddr = 32'hFFFF;
-    cif0.ccwrite = 1;
-    #(2*PERIOD); //ccsnoopaddr should be valid
-    cif1.trans = 1;
-    #(2*PERIOD);
-    #(2*PERIOD);
-    cif1.trans = 0;
-    #(5*PERIOD);
-    reset_C0();
-    reset_C1();
+    testType = "Reading I and D at same time";
+    instReq(32'h00000004);
+    dataRead(32'h00000004);
+    #(PERIOD);
+    reset();
+    #(PERIOD);
+    res = "not in reset";
 end
 
 
