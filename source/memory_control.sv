@@ -27,10 +27,10 @@ module memory_control (
   st state, nstate;
   logic LRU_PC, nLRU_PC;
 
-  logic IorS; //I if 0 S if 1
+  logic IorS, nIorS; //I if 0 S if 1
 
   always_ff @(posedge CLK, negedge nRST) begin : NLGC
-    if(nRST)
+    if(!nRST)
     begin
       state <= IDLE;
       LRU_PC <= 0;
@@ -42,8 +42,9 @@ module memory_control (
     end
   end
 
-  always_comb begin : REQUEST
+  always_comb begin
     nstate = state;
+    nLRU_PC = LRU_PC;
     ccif.iwait = 1;
     ccif.dwait = 1;
     ccif.iload = 0; 
@@ -60,6 +61,7 @@ module memory_control (
 
     case(state)
       IDLE:
+      begin
         if(ccif.dWEN[LRU_PC])
         begin
           nLRU_PC = ~LRU_PC; //change least recently used core
@@ -84,15 +86,19 @@ module memory_control (
           ccif.ramaddr = ccif.iaddr;
           ccif.ramREN = ccif.iREN;
         end
+      end
       
       REQUEST:
+      begin
         ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
         nstate = SNOOP;
+      end
       
       SNOOP:
+      begin
         ccif.ccinv[~LRU_PC] = ccif.ccwrite[LRU_PC];
         ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccsnoopaddr[~LRU_PC] = ccif.ccdaddr[LRU_PC];
+        ccif.ccsnoopaddr[~LRU_PC] = ccif.daddr[LRU_PC];
         if(!ccif.cctrans[~LRU_PC])
         begin
           nstate = ENDSNOOP;
@@ -101,11 +107,13 @@ module memory_control (
         begin
           nstate = CTC;
         end
+      end
       
       CTC:
+      begin
         ccif.ccinv[~LRU_PC] = ccif.ccwrite[LRU_PC];
         ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccsnoopaddr[~LRU_PC] = ccif.ccdaddr[LRU_PC];
+        ccif.ccsnoopaddr[~LRU_PC] = ccif.daddr[LRU_PC];
         //THIS ISNT DONE
         ccif.dload[LRU_PC] = ccif.dstore[~LRU_PC];
 
@@ -117,11 +125,13 @@ module memory_control (
         begin
           nstate = SDAT0;
         end
+      end
       
       SDAT0:
+      begin
         ccif.ccinv[~LRU_PC] = ccif.ccwrite[LRU_PC];
         ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccsnoopaddr[~LRU_PC] = ccif.ccdaddr[LRU_PC];
+        ccif.ccsnoopaddr[~LRU_PC] = ccif.daddr[LRU_PC];
 
         ccif.ramWEN = 1;
         ccif.ramaddr = ccif.daddr[LRU_PC];
@@ -131,11 +141,13 @@ module memory_control (
         begin
           nstate = SDAT1;
         end
-      
+      end
+
       SDAT1:
+      begin
         ccif.ccinv[~LRU_PC] = ccif.ccwrite[LRU_PC];
         ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccsnoopaddr[~LRU_PC] = ccif.ccdaddr[LRU_PC];
+        ccif.ccsnoopaddr[~LRU_PC] = ccif.daddr[LRU_PC];
         
         ccif.ramWEN = 1;
         ccif.ramaddr = ccif.daddr[LRU_PC];
@@ -145,8 +157,10 @@ module memory_control (
         begin
           nstate = ENDSNOOP;
         end
+      end
       
       ENDSNOOP:
+      begin
         if(!ccif.ccwrite[LRU_PC] || !IorS)
         begin
           nstate = DAT0;
@@ -155,8 +169,10 @@ module memory_control (
         begin
           nstate = IDLE;
         end
-      
+      end
+
       DAT0:
+      begin
         ccif.ramaddr[LRU_PC] = ccif.daddr[LRU_PC];
         if(ccif.dREN[LRU_PC])
         begin
@@ -174,8 +190,10 @@ module memory_control (
           ccif.dwait[LRU_PC] = 0;
           nstate = DAT1;
         end
+      end
 
       DAT1:
+      begin
         ccif.ramaddr[LRU_PC] = ccif.daddr[LRU_PC];
         if(ccif.dREN[LRU_PC])
         begin
@@ -193,6 +211,7 @@ module memory_control (
           ccif.dwait[LRU_PC] = 0;
           nstate = IDLE;
         end
+      end
 
     endcase
 

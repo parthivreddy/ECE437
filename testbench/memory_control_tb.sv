@@ -22,12 +22,12 @@ module memory_control_tb;
     ram DUT0(CLK, nRST, ramif);
     memory_control DUT1(CLK, nRST, ccif);
 
-    // assign ramif.ramstore = ccif.ramstore;
-    // assign ramif.ramaddr = ccif.ramaddr;
-    // assign ramif.ramWEN = ccif.ramWEN;
-    // assign ramif.ramREN = ccif.ramREN;
-    // assign ccif.ramload = ramif.ramload;
-    // assign ccif.ramstate = ramif.ramstate;
+    assign ramif.ramstore = ccif.ramstore;
+    assign ramif.ramaddr = ccif.ramaddr;
+    assign ramif.ramWEN = ccif.ramWEN;
+    assign ramif.ramREN = ccif.ramREN;
+    assign ccif.ramload = ramif.ramload;
+    assign ccif.ramstate = ramif.ramstate;
 
 endmodule
 
@@ -77,7 +77,7 @@ task reset_C0;
     cif0.dstore = 0;
     cif0.iaddr = 0;
     cif0.daddr = 0;
-    cif0.iREN = 1;
+    cif0.iREN = 0;
     cif0.ccwrite = 0;
     cif0.cctrans = 0;
 endtask
@@ -89,7 +89,7 @@ task reset_C1;
     cif1.dstore = 0;
     cif1.iaddr = 0;
     cif1.daddr = 0;
-    cif1.iREN = 1;
+    cif1.iREN = 0;
     cif1.ccwrite = 0;
     cif1.cctrans = 0;
 endtask
@@ -190,7 +190,7 @@ initial begin
     cif0.dstore = 0;
     cif0.iaddr = 0;
     cif0.daddr = 0;
-    cif0.iREN = 1;
+    cif0.iREN = 0;
     cif0.ccwrite = 0;
     cif0.cctrans = 0;
 
@@ -199,18 +199,26 @@ initial begin
     cif1.dstore = 0;
     cif1.iaddr = 0;
     cif1.daddr = 0;
-    cif1.iREN = 1;
+    cif1.iREN = 0;
     cif1.ccwrite = 0;
     cif1.cctrans = 0;
+    #(2*PERIOD);
+
+    testType = "initialize/reset";
+    nRST = 0;
+    #(2*PERIOD);
+    nRST = 1;
+    #(2*PERIOD);
 
 
     //TEST CASE 1
     testType = "Regular Instructions";
-    instReqC0(32'h01234567);
-    #(4*PERIOD);
+    instReqC0(32'h1);
+    #(2*PERIOD);
     reset_C0();
-    instReqC1(32'h87654321);
-    #(4*PERIOD);
+    #(2*PERIOD);
+    instReqC1(32'h2);
+    #(2*PERIOD);
     reset_C1();
     
     //TEST CASE 2
@@ -243,7 +251,7 @@ initial begin
     cif0.daddr = 32'hFFFF;
     cif0.ccwrite = 1;
     #(2*PERIOD); //ccsnoopaddr should be valid
-    cif1.trans = 1;
+    cif1.cctrans = 1;
     #(2*PERIOD);
     #(5*PERIOD);
     reset_C0();
@@ -255,12 +263,12 @@ initial begin
     cif0.daddr = 32'hFFFF;
     cif0.ccwrite = 1;
     #(2*PERIOD); //ccsnoopaddr should be valid
-    cif1.trans = 1;
+    cif1.cctrans = 1;
     #(2*PERIOD);
     cif1.dWEN = 1;
     #(2*PERIOD);
     cif1.dWEN = 0;
-    cif1.trans = 0;
+    cif1.cctrans = 0;
     #(5*PERIOD);
     reset_C0();
     reset_C1();
@@ -270,10 +278,10 @@ initial begin
     cif0.daddr = 32'hFFFF;
     cif0.ccwrite = 1;
     #(2*PERIOD); //ccsnoopaddr should be valid
-    cif1.trans = 1;
+    cif1.cctrans = 1;
     #(2*PERIOD);
     #(2*PERIOD);
-    cif1.trans = 0;
+    cif1.cctrans = 0;
     #(5*PERIOD);
     reset_C0();
     reset_C1();
