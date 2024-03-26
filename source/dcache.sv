@@ -213,22 +213,40 @@ module dcache(
             ALLOCATE1: //Taking RAM data and putting it into LRU cache
             //Swap ALLOCATE1 and ALLOCATE2
             begin
-                //this causes issues with WAR
-                //if no flip-flopped REN then dmemWEN is first
+                //need to wait for RAM
+                //miss = 1;
+                ndREN = 1;
+                ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
+                if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
+                begin
+                    ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
+                    ndcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff] = cif.dload;
+                    ndcache[LRU[addr.idx]][addr.idx].valid = 1;
+                    ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
+                    nState = ALLOCATE2;
+                    // dcif.dhit = 1;
+                    // nState = IDLE;
+                end
+            end
+            ALLOCATE2:
+            begin
                 if(dcif.dmemWEN && WENfirst)
                 begin
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
                     ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = dcif.dmemstore;
                     ndcache[LRU[addr.idx]][addr.idx].valid = 1;
                     ndcache[LRU[addr.idx]][addr.idx].dirty = 1;
-                    //dcif.dhit = 1;
-                    //nLRU[addr.idx] = ~LRU[addr.idx];
-                    nState = ALLOCATE2;
+                    dcif.dhit = 1;
+                    //miss = 0;
+                    nLRU[addr.idx] = ~LRU[addr.idx];
+                    nState = IDLE;
+                    // nState = ALLOCATE2;
                 end
-                //need to wait for RAM
                 else
                 begin
+                    //miss = 1;
                     ndREN = 1;
+                    // cif.daddr = dmemaddrFF;
                     ndaddr = dcif.dmemaddr;
                     if(!cif.dwait && cif.daddr == dcif.dmemaddr)
                     begin
@@ -236,30 +254,66 @@ module dcache(
                         ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = cif.dload;
                         ndcache[LRU[addr.idx]][addr.idx].valid = 1;
                         ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
-                        nState = ALLOCATE2;
-                        // dcif.dhit = 1;
-                        // nState = IDLE;
+                        dcif.dhit = 1;
+                        //miss = 0;
+                        nLRU[addr.idx] = ~LRU[addr.idx];
+                        dcif.dmemload = cif.dload;
+                        nState = IDLE;
+                        // nState = ALLOCATE2;
                     end
+
                 end
             end
-            ALLOCATE2:
-            begin
-                ndREN = 1;
-                // cif.daddr = dmemaddrFF;
-                ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
-                if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
-                begin
-                    ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
-                    ndcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff] = cif.dload;
-                    ndcache[LRU[addr.idx]][addr.idx].valid = 1;
-                    ndcache[LRU[addr.idx]][addr.idx].dirty = dcache[LRU[addr.idx]][addr.idx].dirty;
-                    dcif.dhit = 1;
-                    dcif.dmemload = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
-                    nLRU[addr.idx] = ~LRU[addr.idx];
-                    nState = IDLE;
-                    // nState = ALLOCATE2;
-                end
-            end
+            // ALLOCATE1: //Taking RAM data and putting it into LRU cache
+            // //Swap ALLOCATE1 and ALLOCATE2
+            // begin
+            //     //this causes issues with WAR
+            //     //if no flip-flopped REN then dmemWEN is first
+            //     if(dcif.dmemWEN && WENfirst)
+            //     begin
+            //         ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
+            //         ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = dcif.dmemstore;
+            //         ndcache[LRU[addr.idx]][addr.idx].valid = 1;
+            //         ndcache[LRU[addr.idx]][addr.idx].dirty = 1;
+            //         //dcif.dhit = 1;
+            //         //nLRU[addr.idx] = ~LRU[addr.idx];
+            //         nState = ALLOCATE2;
+            //     end
+            //     //need to wait for RAM
+            //     else
+            //     begin
+            //         ndREN = 1;
+            //         ndaddr = dcif.dmemaddr;
+            //         if(!cif.dwait && cif.daddr == dcif.dmemaddr)
+            //         begin
+            //             ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
+            //             ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = cif.dload;
+            //             ndcache[LRU[addr.idx]][addr.idx].valid = 1;
+            //             ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
+            //             nState = ALLOCATE2;
+            //             // dcif.dhit = 1;
+            //             // nState = IDLE;
+            //         end
+            //     end
+            // end
+            // ALLOCATE2:
+            // begin
+            //     ndREN = 1;
+            //     // cif.daddr = dmemaddrFF;
+            //     ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
+            //     if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
+            //     begin
+            //         ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
+            //         ndcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff] = cif.dload;
+            //         ndcache[LRU[addr.idx]][addr.idx].valid = 1;
+            //         ndcache[LRU[addr.idx]][addr.idx].dirty = dcache[LRU[addr.idx]][addr.idx].dirty;
+            //         dcif.dhit = 1;
+            //         dcif.dmemload = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
+            //         nLRU[addr.idx] = ~LRU[addr.idx];
+            //         nState = IDLE;
+            //         // nState = ALLOCATE2;
+            //     end
+            // end
             ENDWR1:
             begin
                 if(dcache[endSet][index].dirty)
