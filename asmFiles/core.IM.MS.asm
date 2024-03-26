@@ -1,5 +1,6 @@
 ori $3, $0, 0xFF00
-lw $4, 0($3) #C0: I->S C1: I->I
+ori $4, $0, 5
+sw $4, 0($3) #C0: I->M C1: I->I
 nop
 
 
@@ -14,7 +15,8 @@ halt
 org 0x200
 nop
 nop
-lw $2, 0($3) #C0: S->S C1: I->S
+nop
+lw $2, 0($3) #C0: M->S C1: I->S
 
 
 halt
