@@ -26,25 +26,41 @@ module memory_control (
 
   st state, nstate;
   logic LRU_PC, nLRU_PC;
+  logic validLRU, nvalidLRU;
+  logic core, ncore;
 
   logic IorS, nIorS; //I if 0 S if 1
+
+
+  logic CurrCore;
+  assign CurrCore = validLRU ? LRU_PC : core;
 
   always_ff @(posedge CLK, negedge nRST) begin : NLGC
     if(!nRST)
     begin
       state <= IDLE;
       LRU_PC <= 0;
+      core <= 0;
+      validLRU <= 0;
+      IorS <= 0;
     end
     else
     begin
       state <= nstate;
       LRU_PC <= nLRU_PC;
+      ncore <= core;
+      validLRU <= nvalidLRU;
+      IorS <= nIorS;
     end
   end
 
-  always_comb begin
+  always_comb begin : REQUEST
     nstate = state;
     nLRU_PC = LRU_PC;
+    ncore = core;
+    nvalidLRU = validLRU;
+    nIorS = IorS;
+
     ccif.iwait = 1;
     ccif.dwait = 1;
     ccif.iload = 0; 
@@ -61,107 +77,151 @@ module memory_control (
 
     case(state)
       IDLE:
-      begin
-        if(ccif.dWEN[LRU_PC])
+        if(ccif.dWEN[0] && ccif.dWEN[1])
         begin
           nLRU_PC = ~LRU_PC; //change least recently used core
+          nvalidLRU = 1;
           nstate = DAT0;
         end
-        else if(ccif.dREN[LRU_PC])
+        else if(ccif.dWEN[0])
+        begin
+          ncore = 0;
+          nvalidLRU = 0;
+          nstate = DAT0;
+        end
+        else if(ccif.dWEN[1])
+        begin
+          ncore = 1;
+          nvalidLRU = 0;
+          nstate = DAT0;
+        end
+        else if(ccif.dREN[0] && ccif.dREN[1])
         begin
           nLRU_PC = ~LRU_PC;
+          nvalidLRU = 1;
           nstate = REQUEST;
         end
-        else if(ccif.ccwrite[LRU_PC])
+        else if(ccif.dREN[0])
+        begin
+          ncore = 0;
+          nvalidLRU = 0;
+          nstate = REQUEST;
+        end
+        else if(ccif.dREN[1])
+        begin
+          ncore = 1;
+          nvalidLRU = 0;
+          nstate = REQUEST;
+        end
+        else if(ccif.ccwrite[0] && ccif.ccwrite[1])
         begin
           nLRU_PC = ~LRU_PC;
+          nvalidLRU = 1;
           nstate = REQUEST;
           IorS = 1; //write (hit but frame is clean) S state
         end
-        else if(ccif.iREN)
+        else if(ccif.ccwrite[0])
+        begin
+          nvalidLRU = 0;
+          nIorS = 1;
+          ncore = 0;
+          nstate = REQUEST;
+        end
+        else if(ccif.ccwrite[1])
+        begin
+          nvalidLRU = 0;
+          nIorS = 1;
+          ncore = 1;
+          nstate = REQUEST;
+        end
+
+        else if(ccif.iREN[0] && ccif.iREN[1])
         begin
           nLRU_PC = ~LRU_PC;
           ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
           ccif.iload = ccif.ramload;
-          ccif.ramaddr = ccif.iaddr;
+          ccif.ramaddr = ccif.iaddr[~LRU_PC]; //use opposite because hasn't switched yet
           ccif.ramREN = ccif.iREN;
         end
-      end
+        else if(ccif.iREN[0])
+        begin
+          ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
+          ccif.iload = ccif.ramload;
+          ccif.ramaddr = ccif.iaddr[0]; //use opposite because 
+          ccif.ramREN = ccif.iREN;
+        end
+        else if(ccif.iREN[1])
+        begin
+          ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
+          ccif.iload = ccif.ramload;
+          ccif.ramaddr = ccif.iaddr[~LRU_PC]; //use opposite because 
+          ccif.ramREN = ccif.iREN;
+        end
+          
       
       REQUEST:
-      begin
-        ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
+        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
         nstate = SNOOP;
-      end
       
       SNOOP:
-      begin
-        ccif.ccinv[~LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccsnoopaddr[~LRU_PC] = ccif.daddr[LRU_PC];
-        if(!ccif.cctrans[~LRU_PC])
+        ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
+        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
+        ccif.ccsnoopaddr[~CurrCore] = ccif.ccdaddr[CurrCore];
+        if(!ccif.cctrans[~CurrCore])
         begin
           nstate = ENDSNOOP;
         end
-        else if(ccif.ccwait[~LRU_PC])
+        else if(ccif.ccwait[~CurrCore])
         begin
           nstate = CTC;
         end
-      end
       
       CTC:
-      begin
-        ccif.ccinv[~LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccsnoopaddr[~LRU_PC] = ccif.daddr[LRU_PC];
+        ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
+        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
+        ccif.ccsnoopaddr[~CurrCore] = ccif.ccdaddr[CurrCore];
         //THIS ISNT DONE
-        ccif.dload[LRU_PC] = ccif.dstore[~LRU_PC];
+        ccif.dload[CurrCore] = ccif.dstore[~CurrCore];
 
-        if(!ccif.cctrans[~LRU_PC])
+        if(!ccif.cctrans[~CurrCore])
         begin
           nstate = ENDSNOOP;
         end
-        if(!ccif.ccwrite[LRU_PC])
+        if(!ccif.ccwrite[CurrCore])
         begin
           nstate = SDAT0;
         end
-      end
       
       SDAT0:
-      begin
-        ccif.ccinv[~LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccsnoopaddr[~LRU_PC] = ccif.daddr[LRU_PC];
+        ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
+        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
+        ccif.ccsnoopaddr[~CurrCore] = ccif.ccdaddr[CurrCore];
 
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[LRU_PC];
-        ccif.ramstore = ccif.dstore[~LRU_PC];
+        ccif.ramaddr = ccif.daddr[CurrCore];
+        ccif.ramstore = ccif.dstore[~CurrCore];
 
         if(ccif.ramstate == ACCESS)
         begin
           nstate = SDAT1;
         end
-      end
-
+      
       SDAT1:
-      begin
-        ccif.ccinv[~LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccwait[LRU_PC] = ccif.ccwrite[LRU_PC];
-        ccif.ccsnoopaddr[~LRU_PC] = ccif.daddr[LRU_PC];
+        ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
+        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
+        ccif.ccsnoopaddr[~CurrCore] = ccif.ccdaddr[CurrCore];
         
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[LRU_PC];
-        ccif.ramstore = ccif.dstore[~LRU_PC];
+        ccif.ramaddr = ccif.daddr[CurrCore];
+        ccif.ramstore = ccif.dstore[~CurrCore];
 
-        if(ccif.ramstate == ACCESS && ~ccif.cctrans[~LRU_PC])
+        if(ccif.ramstate == ACCESS && ~ccif.cctrans[~CurrCore])
         begin
           nstate = ENDSNOOP;
         end
-      end
       
       ENDSNOOP:
-      begin
-        if(!ccif.ccwrite[LRU_PC] || !IorS)
+        if(!ccif.ccwrite[CurrCore] || !IorS)
         begin
           nstate = DAT0;
         end
@@ -169,49 +229,44 @@ module memory_control (
         begin
           nstate = IDLE;
         end
-      end
-
+      
       DAT0:
-      begin
-        ccif.ramaddr[LRU_PC] = ccif.daddr[LRU_PC];
-        if(ccif.dREN[LRU_PC])
+        ccif.ramaddr[CurrCore] = ccif.daddr[CurrCore];
+        if(ccif.dREN[CurrCore])
         begin
           ccif.ramREN = 1;
           ccif.dload = ccif.ramload;
         end
-        else if(ccif.dWEN[LRU_PC])
+        else if(ccif.dWEN[CurrCore])
         begin
           ccif.ramWEN = 1;
-          ccif.ramstore = ccif.dstore[LRU_PC];
+          ccif.ramstore = ccif.dstore[CurrCore];
         end
 
         if(ccif.ramstate == ACCESS)
         begin
-          ccif.dwait[LRU_PC] = 0;
+          ccif.dwait[CurrCore] = 0;
           nstate = DAT1;
         end
-      end
 
       DAT1:
-      begin
-        ccif.ramaddr[LRU_PC] = ccif.daddr[LRU_PC];
-        if(ccif.dREN[LRU_PC])
+        ccif.ramaddr[CurrCore] = ccif.daddr[CurrCore];
+        if(ccif.dREN[CurrCore])
         begin
           ccif.ramREN = 1;
           ccif.dload = ccif.ramload;
         end
-        else if(ccif.dWEN[LRU_PC])
+        else if(ccif.dWEN[CurrCore])
         begin
           ccif.ramWEN = 1;
-          ccif.ramstore = ccif.dstore[LRU_PC];
+          ccif.ramstore = ccif.dstore[CurrCore];
         end
 
         if(ccif.ramstate == ACCESS)
         begin
-          ccif.dwait[LRU_PC] = 0;
+          ccif.dwait[CurrCore] = 0;
           nstate = IDLE;
         end
-      end
 
     endcase
 
