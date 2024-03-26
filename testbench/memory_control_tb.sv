@@ -94,6 +94,13 @@ task reset_C1;
     cif1.cctrans = 0;
 endtask
 
+task reset_DUT;
+    nRST = 0;
+    repeat (2) @(posedge CLK);
+    nRST = 1;
+    repeat (2) @(posedge CLK);
+endtask
+
 task automatic dump_memory_C0();
     string filename = "memcpuC0.hex";
     int memfd;
@@ -220,35 +227,45 @@ initial begin
     instReqC1(32'h5);
     repeat (2) @(posedge CLK);
     reset_C1();
-    
+    reset_DUT();
+
     //TEST CASE 2
     testType = "C0 I->S, C1 S->S || I->I";
     cif0.dREN = 1;
     cif0.daddr = 32'h8000;
-    repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
-    repeat (4) @(posedge CLK);
+    repeat (6) @(posedge CLK); //ccsnoopaddr should be valid
+    cif0.daddr = 32'h8004;
+    repeat (2) @(posedge CLK);
     reset_C0();
     repeat (3) @(posedge CLK);
+    reset_DUT();
 
     //TEST CASE 3
     testType = "C0 I->S, C1 M->S";
     cif0.dREN = 1;
     cif0.daddr = 32'h8000;
+    cif1.daddr = 32'h8000;
     repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
     cif1.cctrans = 1;
     @(posedge CLK);
     cif1.dWEN = 1; //core 1 writing back
-    @(posedge CLK);
     cif1.dstore = 32'hBEEF;
-    @(posedge CLK);
+    repeat (2) @(posedge CLK);
+    cif1.daddr = 32'h8004;
     cif1.dstore = 32'hFEED;
-    @(posedge CLK);
+    repeat (2) @(posedge CLK);
     cif1.cctrans = 0;
     cif1.dWEN = 0;
-    repeat (3) @(posedge CLK);
+    @(posedge CLK);
+    cif0.daddr = 32'h8000;
+    repeat (2) @(posedge CLK);
+    cif0.daddr = 32'h8004;
+    repeat (2) @(posedge CLK);
+
     reset_C0();
     reset_C1();
     repeat (3) @(posedge CLK);
+    reset_DUT();
 
     //TEST CASE 4
     testType = "C0 I->M, C1 S->I || I->I";
