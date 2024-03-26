@@ -55,20 +55,20 @@ task instReqC1;
     cif1.iaddr = addr;
 endtask
 
-task dataRead;
-    input [31:0] addr;
+// task dataRead;
+//     input [31:0] addr;
 
-    cif0.daddr = addr;
-    cif0.dREN = 1;
-endtask
+//     cif0.daddr = addr;
+//     cif0.dREN = 1;
+// endtask
 
-task dataWrite;
-    input [31:0] addr;
-    input [31:0] storeVal;
-    cif0.dWEN = 1;
-    cif0.daddr = addr;
-    cif0.dstore = storeVal;
-endtask
+// task dataWrite;
+//     input [31:0] addr;
+//     input [31:0] storeVal;
+//     cif0.dWEN = 1;
+//     cif0.daddr = addr;
+//     cif0.dstore = storeVal;
+// endtask
 
 task reset_C0;
     res = "core 0 reset";
@@ -94,7 +94,7 @@ task reset_C1;
     cif1.cctrans = 0;
 endtask
 
-task automatic dump_memory_0();
+task automatic dump_memory_C0();
     string filename = "memcpuC0.hex";
     int memfd;
 
@@ -139,7 +139,7 @@ task automatic dump_memory_0();
     end
   endtask
 
-task automatic dump_memory_1();
+task automatic dump_memory_C1();
     string filename = "memcpuC1.hex";
     int memfd;
 
@@ -226,9 +226,6 @@ initial begin
     cif0.dREN = 1;
     cif0.daddr = 32'h8000;
     repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
-    cif1.cctrans = 1;
-    repeat (2) @(posedge CLK);
-    cif1.cctrans = 0;
     repeat (4) @(posedge CLK);
     reset_C0();
     repeat (3) @(posedge CLK);
@@ -239,9 +236,16 @@ initial begin
     cif0.daddr = 32'h8000;
     repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
     cif1.cctrans = 1;
-    repeat (2) @(posedge CLK);
+    @(posedge CLK);
     cif1.dWEN = 1; //core 1 writing back
-    repeat (10) @(posedge CLK);
+    @(posedge CLK);
+    cif1.dstore = 32'hBEEF;
+    @(posedge CLK);
+    cif1.dstore = 32'hFEED;
+    @(posedge CLK);
+    cif1.cctrans = 0;
+    cif1.dWEN = 0;
+    repeat (3) @(posedge CLK);
     reset_C0();
     reset_C1();
     repeat (3) @(posedge CLK);
@@ -251,10 +255,7 @@ initial begin
     cif0.dREN = 1;
     cif0.daddr = 32'hFFFF;
     cif0.ccwrite = 1;
-    repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
-    cif1.cctrans = 1;
-    repeat (2) @(posedge CLK);
-    repeat (5) @(posedge CLK);
+    repeat (7) @(posedge CLK); //ccsnoopaddr should be valid
     reset_C0();
     reset_C1();
     repeat (3) @(posedge CLK);
@@ -266,12 +267,12 @@ initial begin
     cif0.ccwrite = 1;
     repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
     cif1.cctrans = 1;
-    repeat (2) @(posedge CLK);
+    @(posedge CLK);
     cif1.dWEN = 1;
-    repeat (2) @(posedge CLK);
+    repeat (3) @(posedge CLK);
     cif1.dWEN = 0;
     cif1.cctrans = 0;
-    repeat (5) @(posedge CLK);
+    repeat (4) @(posedge CLK);
     reset_C0();
     reset_C1();
     repeat (3) @(posedge CLK);
@@ -281,10 +282,6 @@ initial begin
     cif0.daddr = 32'hFFFF;
     cif0.ccwrite = 1;
     repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
-    cif1.cctrans = 1;
-    repeat (2) @(posedge CLK);
-    repeat (2) @(posedge CLK);
-    cif1.cctrans = 0;
     repeat (5) @(posedge CLK);
     reset_C0();
     reset_C1();

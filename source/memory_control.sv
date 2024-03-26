@@ -226,7 +226,7 @@ module memory_control (
         ccif.ramaddr = ccif.daddr[CurrCore];
         ccif.ramstore = ccif.dstore[~CurrCore];
 
-        if(ccif.ramstate == ACCESS && ~ccif.cctrans[~CurrCore])
+        if(ccif.ramstate == ACCESS)
         begin
           nstate = ENDSNOOP;
         end
@@ -240,14 +240,14 @@ module memory_control (
         end
         else
         begin
-          nstate = IDLE;
+          nstate = DAT0;
         end
       end
 
       DAT0:
       begin
         ccif.ramaddr[CurrCore] = ccif.daddr[CurrCore];
-        if(ccif.dREN[CurrCore])
+        if(ccif.dREN[CurrCore] || ccif.ccwrite[CurrCore])
         begin
           ccif.ramREN = 1;
           ccif.dload = ccif.ramload;
@@ -268,7 +268,7 @@ module memory_control (
       DAT1:
       begin
         ccif.ramaddr[CurrCore] = ccif.daddr[CurrCore];
-        if(ccif.dREN[CurrCore])
+        if(ccif.dREN[CurrCore] || ccif.ccwrite[CurrCore])
         begin
           ccif.ramREN = 1;
           ccif.dload = ccif.ramload;
