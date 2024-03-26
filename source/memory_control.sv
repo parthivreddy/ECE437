@@ -48,13 +48,13 @@ module memory_control (
     begin
       state <= nstate;
       LRU_PC <= nLRU_PC;
-      ncore <= core;
+      core <= ncore;
       validLRU <= nvalidLRU;
       IorS <= nIorS;
     end
   end
 
-  always_comb begin : REQUEST
+  always_comb begin : BUS
     nstate = state;
     nLRU_PC = LRU_PC;
     ncore = core;
@@ -77,6 +77,7 @@ module memory_control (
 
     case(state)
       IDLE:
+      begin
         if(ccif.dWEN[0] && ccif.dWEN[1])
         begin
           nLRU_PC = ~LRU_PC; //change least recently used core
@@ -118,7 +119,7 @@ module memory_control (
           nLRU_PC = ~LRU_PC;
           nvalidLRU = 1;
           nstate = REQUEST;
-          IorS = 1; //write (hit but frame is clean) S state
+          nIorS = 1; //write (hit but frame is clean) S state
         end
         else if(ccif.ccwrite[0])
         begin
@@ -141,32 +142,36 @@ module memory_control (
           ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
           ccif.iload = ccif.ramload;
           ccif.ramaddr = ccif.iaddr[~LRU_PC]; //use opposite because hasn't switched yet
-          ccif.ramREN = ccif.iREN;
+          ccif.ramREN = 1;
         end
         else if(ccif.iREN[0])
         begin
           ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
           ccif.iload = ccif.ramload;
           ccif.ramaddr = ccif.iaddr[0]; //use opposite because 
-          ccif.ramREN = ccif.iREN;
+          ccif.ramREN = 1;
         end
         else if(ccif.iREN[1])
         begin
           ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
           ccif.iload = ccif.ramload;
           ccif.ramaddr = ccif.iaddr[~LRU_PC]; //use opposite because 
-          ccif.ramREN = ccif.iREN;
+          ccif.ramREN = 1;
         end
+      end
           
       
       REQUEST:
+      begin
         ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
         nstate = SNOOP;
+      end
       
       SNOOP:
+      begin
         ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
         ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccsnoopaddr[~CurrCore] = ccif.ccdaddr[CurrCore];
+        ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
         if(!ccif.cctrans[~CurrCore])
         begin
           nstate = ENDSNOOP;
@@ -175,11 +180,13 @@ module memory_control (
         begin
           nstate = CTC;
         end
-      
+      end
+
       CTC:
+      begin
         ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
         ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccsnoopaddr[~CurrCore] = ccif.ccdaddr[CurrCore];
+        ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
         //THIS ISNT DONE
         ccif.dload[CurrCore] = ccif.dstore[~CurrCore];
 
@@ -191,11 +198,13 @@ module memory_control (
         begin
           nstate = SDAT0;
         end
+      end
       
       SDAT0:
+      begin
         ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
         ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccsnoopaddr[~CurrCore] = ccif.ccdaddr[CurrCore];
+        ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
 
         ccif.ramWEN = 1;
         ccif.ramaddr = ccif.daddr[CurrCore];
@@ -205,11 +214,13 @@ module memory_control (
         begin
           nstate = SDAT1;
         end
-      
+      end
+
       SDAT1:
+      begin
         ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
         ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccsnoopaddr[~CurrCore] = ccif.ccdaddr[CurrCore];
+        ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
         
         ccif.ramWEN = 1;
         ccif.ramaddr = ccif.daddr[CurrCore];
@@ -219,8 +230,10 @@ module memory_control (
         begin
           nstate = ENDSNOOP;
         end
-      
+      end
+
       ENDSNOOP:
+      begin
         if(!ccif.ccwrite[CurrCore] || !IorS)
         begin
           nstate = DAT0;
@@ -229,8 +242,10 @@ module memory_control (
         begin
           nstate = IDLE;
         end
-      
+      end
+
       DAT0:
+      begin
         ccif.ramaddr[CurrCore] = ccif.daddr[CurrCore];
         if(ccif.dREN[CurrCore])
         begin
@@ -248,8 +263,10 @@ module memory_control (
           ccif.dwait[CurrCore] = 0;
           nstate = DAT1;
         end
+      end
 
       DAT1:
+      begin
         ccif.ramaddr[CurrCore] = ccif.daddr[CurrCore];
         if(ccif.dREN[CurrCore])
         begin
@@ -267,6 +284,7 @@ module memory_control (
           ccif.dwait[CurrCore] = 0;
           nstate = IDLE;
         end
+      end
 
     endcase
 

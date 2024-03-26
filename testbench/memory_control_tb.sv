@@ -202,89 +202,93 @@ initial begin
     cif1.iREN = 0;
     cif1.ccwrite = 0;
     cif1.cctrans = 0;
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
 
     testType = "initialize/reset";
     nRST = 0;
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
     nRST = 1;
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
 
 
     //TEST CASE 1
     testType = "Regular Instructions";
     instReqC0(32'h1);
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
     reset_C0();
-    #(2*PERIOD);
-    instReqC1(32'h2);
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
+    instReqC1(32'h5);
+    repeat (2) @(posedge CLK);
     reset_C1();
     
     //TEST CASE 2
     testType = "C0 I->S, C1 S->S || I->I";
     cif0.dREN = 1;
     cif0.daddr = 32'h8000;
-    #(2*PERIOD); //ccsnoopaddr should be valid
+    repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
     cif1.cctrans = 1;
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
     cif1.cctrans = 0;
-    #(5*PERIOD);
+    repeat (4) @(posedge CLK);
     reset_C0();
+    repeat (3) @(posedge CLK);
 
     //TEST CASE 3
     testType = "C0 I->S, C1 M->S";
     cif0.dREN = 1;
     cif0.daddr = 32'h8000;
-    #(2*PERIOD); //ccsnoopaddr should be valid
+    repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
     cif1.cctrans = 1;
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
     cif1.dWEN = 1; //core 1 writing back
-    #(10*PERIOD);
+    repeat (10) @(posedge CLK);
     reset_C0();
     reset_C1();
-
+    repeat (3) @(posedge CLK);
 
     //TEST CASE 4
     testType = "C0 I->M, C1 S->I || I->I";
     cif0.dREN = 1;
     cif0.daddr = 32'hFFFF;
     cif0.ccwrite = 1;
-    #(2*PERIOD); //ccsnoopaddr should be valid
+    repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
     cif1.cctrans = 1;
-    #(2*PERIOD);
-    #(5*PERIOD);
+    repeat (2) @(posedge CLK);
+    repeat (5) @(posedge CLK);
     reset_C0();
     reset_C1();
+    repeat (3) @(posedge CLK);
 
     //TEST CASE 5
     testType = "C0 I->M, C1 M->I";
     cif0.dREN = 1;
     cif0.daddr = 32'hFFFF;
     cif0.ccwrite = 1;
-    #(2*PERIOD); //ccsnoopaddr should be valid
+    repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
     cif1.cctrans = 1;
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
     cif1.dWEN = 1;
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
     cif1.dWEN = 0;
     cif1.cctrans = 0;
-    #(5*PERIOD);
+    repeat (5) @(posedge CLK);
     reset_C0();
     reset_C1();
+    repeat (3) @(posedge CLK);
 
     //TEST CASE 6
     testType = "C0 S->M, C1 S->I || I->I";
     cif0.daddr = 32'hFFFF;
     cif0.ccwrite = 1;
-    #(2*PERIOD); //ccsnoopaddr should be valid
+    repeat (2) @(posedge CLK); //ccsnoopaddr should be valid
     cif1.cctrans = 1;
-    #(2*PERIOD);
-    #(2*PERIOD);
+    repeat (2) @(posedge CLK);
+    repeat (2) @(posedge CLK);
     cif1.cctrans = 0;
-    #(5*PERIOD);
+    repeat (5) @(posedge CLK);
     reset_C0();
     reset_C1();
+    repeat (3) @(posedge CLK);
 end
 
 
