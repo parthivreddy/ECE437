@@ -176,29 +176,29 @@ module memory_control (
         begin
           nstate = ENDSNOOP;
         end
-        else if(ccif.ccwait[~CurrCore])
-        begin
-          nstate = CTC;
-        end
-      end
-
-      CTC:
-      begin
-        ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
-        //THIS ISNT DONE
-        ccif.dload[CurrCore] = ccif.dstore[~CurrCore];
-
-        if(!ccif.cctrans[~CurrCore])
-        begin
-          nstate = ENDSNOOP;
-        end
-        if(!ccif.ccwrite[CurrCore])
+        else
         begin
           nstate = SDAT0;
         end
       end
+
+      // CTC:
+      // begin
+      //   ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
+      //   ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
+      //   ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
+      //   //THIS ISNT DONE
+      //   ccif.dload[CurrCore] = ccif.dstore[~CurrCore];
+
+      //   if(!ccif.cctrans[~CurrCore])
+      //   begin
+      //     nstate = ENDSNOOP;
+      //   end
+      //   if(!ccif.ccwrite[CurrCore])
+      //   begin
+      //     nstate = SDAT0;
+      //   end
+      // end
       
       SDAT0:
       begin
