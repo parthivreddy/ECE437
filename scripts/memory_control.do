@@ -37,10 +37,10 @@ add wave -noupdate -expand -group cif1 /memory_control_tb/cif1/cctrans
 add wave -noupdate -expand -group cif1 /memory_control_tb/cif1/ccsnoopaddr
 add wave -noupdate -expand -group DUT /memory_control_tb/DUT1/state
 add wave -noupdate -expand -group DUT /memory_control_tb/DUT1/nstate
-add wave -noupdate -expand -group DUT /memory_control_tb/DUT1/CurrCore
 add wave -noupdate -expand -group DUT /memory_control_tb/DUT1/LRU_PC
 add wave -noupdate -expand -group DUT /memory_control_tb/DUT1/nLRU_PC
-add wave -noupdate -expand -group DUT /memory_control_tb/DUT1/IorS
+add wave -noupdate -expand -group DUT /memory_control_tb/DUT1/core
+add wave -noupdate -expand -group DUT /memory_control_tb/DUT1/ncore
 add wave -noupdate -expand -group ram /memory_control_tb/ramif/ramREN
 add wave -noupdate -expand -group ram /memory_control_tb/ramif/ramWEN
 add wave -noupdate -expand -group ram /memory_control_tb/ramif/ramaddr
@@ -73,7 +73,7 @@ add wave -noupdate -group memoryCNT /memory_control_tb/ccif/ramaddr
 add wave -noupdate -group memoryCNT /memory_control_tb/ccif/ramstore
 add wave -noupdate -group memoryCNT /memory_control_tb/ccif/ramload
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {208344 ps} 0}
+WaveRestoreCursors {{Cursor 1} {22722 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -89,4 +89,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {158535 ps} {340535 ps}
+WaveRestoreZoom {0 ps} {182 ns}

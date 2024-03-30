@@ -221,12 +221,19 @@ initial begin
     //TEST CASE 1
     testType = "Regular Instructions";
     instReqC0(32'h1);
-    repeat (2) @(posedge CLK);
+    repeat (3) @(posedge CLK);
     reset_C0();
     repeat (2) @(posedge CLK);
     instReqC1(32'h5);
-    repeat (2) @(posedge CLK);
+    repeat (3) @(posedge CLK);
     reset_C1();
+    instReqC0(32'h1);
+    instReqC1(32'h5);
+    repeat (3) @(posedge CLK);
+    reset_C0();
+    repeat (3) @(posedge CLK);
+    reset_C1();
+    repeat (3) @(posedge CLK);
     reset_DUT();
 
     //TEST CASE 2
@@ -272,10 +279,13 @@ initial begin
     cif0.dREN = 1;
     cif0.daddr = 32'hFFFF;
     cif0.ccwrite = 1;
-    repeat (7) @(posedge CLK); //ccsnoopaddr should be valid
+    repeat (6) @(posedge CLK); //ccsnoopaddr should be valid
+    cif0.daddr = 32'hEEEE;
+    repeat (2) @(posedge CLK);
     reset_C0();
     reset_C1();
     repeat (3) @(posedge CLK);
+    reset_DUT();
 
     //TEST CASE 5
     testType = "C0 I->M, C1 M->I";
@@ -293,6 +303,7 @@ initial begin
     reset_C0();
     reset_C1();
     repeat (3) @(posedge CLK);
+    reset_DUT();
 
     //TEST CASE 6
     testType = "C0 S->M, C1 S->I || I->I";
