@@ -22,18 +22,13 @@ module memory_control (
   // number of cpus for cc
   parameter CPUS = 1;
 
-  typedef enum logic [3:0] {IDLE, REQUEST, SNOOP, ENDSNOOP, CTC, SDAT0, SDAT1, DAT0, DAT1, ARB} st;
+  typedef enum logic [3:0] {IDLE, ILOAD, REQUEST, SNOOP, ENDSNOOP, CTC, SDAT0, SDAT1, DAT0, DAT1, ARB} st;
 
   st state, nstate;
   logic LRU_PC, nLRU_PC;
   logic validLRU, nvalidLRU;
   logic core, ncore;
 
-  logic IorS, nIorS; //I if 0 S if 1
-
-
-  logic CurrCore;
-  assign CurrCore = validLRU ? LRU_PC : core;
 
   always_ff @(posedge CLK, negedge nRST) begin : NLGC
     if(!nRST)
@@ -42,7 +37,6 @@ module memory_control (
       LRU_PC <= 0;
       core <= 0;
       validLRU <= 0;
-      IorS <= 0;
     end
     else
     begin
@@ -50,7 +44,6 @@ module memory_control (
       LRU_PC <= nLRU_PC;
       core <= ncore;
       validLRU <= nvalidLRU;
-      IorS <= nIorS;
     end
   end
 
@@ -59,7 +52,6 @@ module memory_control (
     nLRU_PC = LRU_PC;
     ncore = core;
     nvalidLRU = validLRU;
-    nIorS = IorS;
 
     ccif.iwait = 1;
     ccif.dwait = 1;
@@ -78,101 +70,59 @@ module memory_control (
     case(state)
       IDLE:
       begin
-        if(ccif.dWEN[0] && ccif.dWEN[1])
+        if(ccif.dREN)
         begin
-          nLRU_PC = ~LRU_PC; //change least recently used core
-          nvalidLRU = 1;
+          ncore = ccif.dREN[1] && !ccif.dREN[0];
+          nstate = REQUEST;
+        end
+        else if(ccif.dWEN)
+        begin
+          ncore = ccif.dWEN[1] && !ccif.dWEN[0];
           nstate = DAT0;
         end
-        else if(ccif.dWEN[0])
-        begin
-          ncore = 0;
-          nvalidLRU = 0;
-          nstate = DAT0;
-        end
-        else if(ccif.dWEN[1])
-        begin
-          ncore = 1;
-          nvalidLRU = 0;
-          nstate = DAT0;
-        end
-        else if(ccif.dREN[0] && ccif.dREN[1])
-        begin
-          nLRU_PC = ~LRU_PC;
-          nvalidLRU = 1;
-          nstate = REQUEST;
-        end
-        else if(ccif.dREN[0])
-        begin
-          ncore = 0;
-          nvalidLRU = 0;
-          nstate = REQUEST;
-        end
-        else if(ccif.dREN[1])
-        begin
-          ncore = 1;
-          nvalidLRU = 0;
-          nstate = REQUEST;
-        end
-        else if(ccif.ccwrite[0] && ccif.ccwrite[1])
-        begin
-          nLRU_PC = ~LRU_PC;
-          nvalidLRU = 1;
-          nstate = REQUEST;
-          nIorS = 1; //write (hit but frame is clean) S state
-        end
-        else if(ccif.ccwrite[0])
-        begin
-          nvalidLRU = 0;
-          nIorS = 1;
-          ncore = 0;
-          nstate = REQUEST;
-        end
-        else if(ccif.ccwrite[1])
-        begin
-          nvalidLRU = 0;
-          nIorS = 1;
-          ncore = 1;
-          nstate = REQUEST;
-        end
-
         else if(ccif.iREN[0] && ccif.iREN[1])
         begin
-          nLRU_PC = ~LRU_PC;
-          ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
-          ccif.iload = ccif.ramload;
-          ccif.ramaddr = ccif.iaddr[~LRU_PC]; //use opposite because hasn't switched yet
-          ccif.ramREN = 1;
+          ncore = ~core;
+          nstate = ILOAD;
         end
         else if(ccif.iREN[0])
         begin
-          ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
-          ccif.iload = ccif.ramload;
-          ccif.ramaddr = ccif.iaddr[0]; //use opposite because 
-          ccif.ramREN = 1;
+          ncore = 0;
+          nstate = ILOAD;
         end
         else if(ccif.iREN[1])
         begin
-          ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
-          ccif.iload = ccif.ramload;
-          ccif.ramaddr = ccif.iaddr[~LRU_PC]; //use opposite because 
-          ccif.ramREN = 1;
+          ncore = 1;
+          nstate = ILOAD;
         end
       end
+
+      ILOAD:
+      begin
+        ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
+        ccif.iload = ccif.ramload;
+        ccif.ramaddr = ccif.iaddr[core]; //use opposite because hasn't switched yet
+        ccif.ramREN = 1;
+        if(ccif.ramstate == ACCESS)
+        begin
+          nstate = IDLE;
+        end
+      end
+        
           
       
       REQUEST:
       begin
-        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
+        ccif.ccwait[core] = ccif.ccwrite[core];
         nstate = SNOOP;
       end
       
       SNOOP:
       begin
-        ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
-        if(!ccif.cctrans[~CurrCore])
+        ccif.ccinv[~core] = ccif.ccwrite[core];
+        ccif.ccwait[core] = ccif.ccwrite[core];
+        ccif.ccsnoopaddr[~core] = ccif.daddr[core];
+        if(!ccif.cctrans[~core])
         begin
           nstate = ENDSNOOP;
         end
@@ -184,17 +134,17 @@ module memory_control (
 
       // CTC:
       // begin
-      //   ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
-      //   ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
-      //   ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
+      //   ccif.ccinv[~core] = ccif.ccwrite[core];
+      //   ccif.ccwait[core] = ccif.ccwrite[core];
+      //   ccif.ccsnoopaddr[~core] = ccif.daddr[core];
       //   //THIS ISNT DONE
-      //   ccif.dload[CurrCore] = ccif.dstore[~CurrCore];
+      //   ccif.dload[core] = ccif.dstore[~core];
 
-      //   if(!ccif.cctrans[~CurrCore])
+      //   if(!ccif.cctrans[~core])
       //   begin
       //     nstate = ENDSNOOP;
       //   end
-      //   if(!ccif.ccwrite[CurrCore])
+      //   if(!ccif.ccwrite[core])
       //   begin
       //     nstate = SDAT0;
       //   end
@@ -202,13 +152,13 @@ module memory_control (
       
       SDAT0:
       begin
-        ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
+        ccif.ccinv[~core] = ccif.ccwrite[core];
+        ccif.ccwait[core] = ccif.ccwrite[core];
+        ccif.ccsnoopaddr[~core] = ccif.daddr[core];
 
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[~CurrCore];
-        ccif.ramstore = ccif.dstore[~CurrCore];
+        ccif.ramaddr = ccif.daddr[~core];
+        ccif.ramstore = ccif.dstore[~core];
 
         if(ccif.ramstate == ACCESS)
         begin
@@ -218,13 +168,13 @@ module memory_control (
 
       SDAT1:
       begin
-        ccif.ccinv[~CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccwait[CurrCore] = ccif.ccwrite[CurrCore];
-        ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
+        ccif.ccinv[~core] = ccif.ccwrite[core];
+        ccif.ccwait[core] = ccif.ccwrite[core];
+        ccif.ccsnoopaddr[~core] = ccif.daddr[core];
         
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[~CurrCore];
-        ccif.ramstore = ccif.dstore[~CurrCore];
+        ccif.ramaddr = ccif.daddr[~core];
+        ccif.ramstore = ccif.dstore[~core];
 
         if(ccif.ramstate == ACCESS)
         begin
@@ -234,54 +184,49 @@ module memory_control (
 
       ENDSNOOP:
       begin
-        if(!ccif.ccwrite[CurrCore] || !IorS)
-        begin
-          nstate = DAT0;
-        end
-        else
-        begin
-          nstate = DAT0;
-        end
+        ccif.ccinv[~core] = 0;
+        ccif.ccwait[core] = 0;
+        nstate = DAT0;
       end
 
       DAT0:
       begin
-        ccif.ramaddr = ccif.daddr[CurrCore];
-        if(ccif.dREN[CurrCore] || ccif.ccwrite[CurrCore])
+        ccif.ramaddr = ccif.daddr[core];
+        if(ccif.dREN[core] || ccif.ccwrite[core])
         begin
           ccif.ramREN = 1;
           ccif.dload = ccif.ramload;
         end
-        else if(ccif.dWEN[CurrCore])
+        else if(ccif.dWEN[core])
         begin
           ccif.ramWEN = 1;
-          ccif.ramstore = ccif.dstore[CurrCore];
+          ccif.ramstore = ccif.dstore[core];
         end
 
         if(ccif.ramstate == ACCESS)
         begin
-          ccif.dwait[CurrCore] = 0;
+          ccif.dwait[core] = 0;
           nstate = DAT1;
         end
       end
 
       DAT1:
       begin
-        ccif.ramaddr = ccif.daddr[CurrCore];
-        if(ccif.dREN[CurrCore] || ccif.ccwrite[CurrCore])
+        ccif.ramaddr = ccif.daddr[core];
+        if(ccif.dREN[core] || ccif.ccwrite[core])
         begin
           ccif.ramREN = 1;
           ccif.dload = ccif.ramload;
         end
-        else if(ccif.dWEN[CurrCore])
+        else if(ccif.dWEN[core])
         begin
           ccif.ramWEN = 1;
-          ccif.ramstore = ccif.dstore[CurrCore];
+          ccif.ramstore = ccif.dstore[core];
         end
 
         if(ccif.ramstate == ACCESS)
         begin
-          ccif.dwait[CurrCore] = 0;
+          ccif.dwait[core] = 0;
           nstate = IDLE;
         end
       end
