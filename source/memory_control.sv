@@ -207,7 +207,7 @@ module memory_control (
         ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
 
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[CurrCore];
+        ccif.ramaddr = ccif.daddr[~CurrCore];
         ccif.ramstore = ccif.dstore[~CurrCore];
 
         if(ccif.ramstate == ACCESS)
@@ -223,7 +223,7 @@ module memory_control (
         ccif.ccsnoopaddr[~CurrCore] = ccif.daddr[CurrCore];
         
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[CurrCore];
+        ccif.ramaddr = ccif.daddr[~CurrCore];
         ccif.ramstore = ccif.dstore[~CurrCore];
 
         if(ccif.ramstate == ACCESS)
@@ -246,7 +246,7 @@ module memory_control (
 
       DAT0:
       begin
-        ccif.ramaddr[CurrCore] = ccif.daddr[CurrCore];
+        ccif.ramaddr = ccif.daddr[CurrCore];
         if(ccif.dREN[CurrCore] || ccif.ccwrite[CurrCore])
         begin
           ccif.ramREN = 1;
@@ -267,7 +267,7 @@ module memory_control (
 
       DAT1:
       begin
-        ccif.ramaddr[CurrCore] = ccif.daddr[CurrCore];
+        ccif.ramaddr = ccif.daddr[CurrCore];
         if(ccif.dREN[CurrCore] || ccif.ccwrite[CurrCore])
         begin
           ccif.ramREN = 1;
