@@ -42,6 +42,9 @@ module dcache(
     state currState;
     state nState;
 
+    assign cif.ccwrite = dcif.dmemWEN;
+    assign dcache[LRU[cif.ccsnoopaddr[5:3]]].valid = !ccif.inv;
+
     always_ff @(posedge CLK, negedge nRST) begin : nST
         if(!nRST)
         begin
@@ -246,6 +249,7 @@ module dcache(
                 //need to wait for RAM
                 //miss = 1;
                 ndREN = 1;
+                cif.cctrans = dcache[LRU[addr.idx]].dirty;
                 ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
                 if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
                 begin
