@@ -158,13 +158,13 @@ module dcache(
                 begin
                     nState = ENDWR1;
                 end
-                else if(dcif.dmemREN || dcif.dmemWEN)
+                else if(dcif.dmemREN)
                 begin
                     if(dcache[0][addr.idx].valid && dcache[0][addr.idx].tag == addr.tag)
                     begin
                         dcif.dhit = 1;
                         dcif.dmemload = dcache[0][addr.idx].data[addr.blkoff];
-                        ndcache[0][addr.idx].dirty = dcif.dmemWEN ? 1 : dcache[0][addr.idx].dirty; //might not need this line
+                        ndcache[0][addr.idx].dirty = dcache[0][addr.idx].dirty; //might not need this line
                         ndcache[0][addr.idx].data[addr.blkoff] = dcif.dmemWEN ? dcif.dmemstore : dcache[0][addr.idx].data[addr.blkoff];
                         nhit_counter = hit_counter + 1;
                         nLRU[addr.idx] = 1;
@@ -173,7 +173,37 @@ module dcache(
                     begin
                         dcif.dhit = 1;
                         dcif.dmemload = dcache[1][addr.idx].data[addr.blkoff];
-                        ndcache[1][addr.idx].dirty = dcif.dmemWEN ? 1 : dcache[1][addr.idx].dirty;
+                        ndcache[1][addr.idx].dirty = dcache[1][addr.idx].dirty;
+                        ndcache[1][addr.idx].data[addr.blkoff] = dcif.dmemWEN ? dcif.dmemstore : dcache[1][addr.idx].data[addr.blkoff];
+                        nhit_counter = hit_counter + 1;
+                        nLRU[addr.idx] = 0;
+                    end
+                    //Misses
+                    else if(dcache[LRU[addr.idx]][addr.idx].dirty)
+                    begin
+                        nState = WB1;
+                    end
+                    else
+                    begin
+                        nState = ALLOCATE1;
+                    end
+                end
+                else if(dcif.dmemWEN)
+                begin
+                    if(dcache[0][addr.idx].valid && dcache[0][addr.idx].tag == addr.tag && dcache[0][addr.idx].dirty)
+                    begin
+                        dcif.dhit = 1;
+                        dcif.dmemload = dcache[0][addr.idx].data[addr.blkoff];
+                        ndcache[0][addr.idx].dirty = 1; //might not need this line
+                        ndcache[0][addr.idx].data[addr.blkoff] = dcif.dmemWEN ? dcif.dmemstore : dcache[0][addr.idx].data[addr.blkoff];
+                        nhit_counter = hit_counter + 1;
+                        nLRU[addr.idx] = 1;
+                    end
+                    else if(dcache[1][addr.idx].valid && dcache[1][addr.idx].tag == addr.tag && dcache[1][addr.idx].dirty)
+                    begin
+                        dcif.dhit = 1;
+                        dcif.dmemload = dcache[1][addr.idx].data[addr.blkoff];
+                        ndcache[1][addr.idx].dirty = 1;
                         ndcache[1][addr.idx].data[addr.blkoff] = dcif.dmemWEN ? dcif.dmemstore : dcache[1][addr.idx].data[addr.blkoff];
                         nhit_counter = hit_counter + 1;
                         nLRU[addr.idx] = 0;
