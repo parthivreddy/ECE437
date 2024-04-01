@@ -45,10 +45,10 @@ module memory_control (
     nstate = state;
     ncore = core;
 
-    ccif.iwait = 1;
-    ccif.dwait = 1;
-    ccif.iload = 0; 
-    ccif.dload = 0;
+    ccif.iwait = '1;
+    ccif.dwait = '1;
+    ccif.iload = '0; 
+    ccif.dload = '0;
     ccif.ramaddr = 0;
     ccif.ramstore = 0;
     ccif.ramWEN = 0;
@@ -91,8 +91,8 @@ module memory_control (
 
       ILOAD:
       begin
-        ccif.iwait = (ccif.ramstate == ACCESS) ? 0 : 1;
-        ccif.iload = ccif.ramload;
+        ccif.iwait[core] = (ccif.ramstate == ACCESS) ? 0 : 1;
+        ccif.iload[core] = ccif.ramload;
         ccif.ramaddr = ccif.iaddr[core]; //use opposite because hasn't switched yet
         ccif.ramREN = 1;
         if(ccif.ramstate == ACCESS)

@@ -90,20 +90,25 @@ add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/ccwrite
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/cctrans
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/ccinv
 add wave -noupdate -divider MemController
+add wave -noupdate -group MemCTRL -group RAM /system_tb/DUT/CPU/ccif/ramWEN
+add wave -noupdate -group MemCTRL -group RAM /system_tb/DUT/CPU/ccif/ramREN
+add wave -noupdate -group MemCTRL -group RAM /system_tb/DUT/CPU/ccif/ramstate
+add wave -noupdate -group MemCTRL -group RAM /system_tb/DUT/CPU/ccif/ramaddr
+add wave -noupdate -group MemCTRL -group RAM /system_tb/DUT/CPU/ccif/ramstore
+add wave -noupdate -group MemCTRL -group RAM /system_tb/DUT/CPU/ccif/ramload
 add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/CC/state
 add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/CC/nstate
+add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/iREN
+add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/CC/ccif/iwait
+add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/dREN
+add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/dWEN
+add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/CC/ccif/dwait
 add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/CC/core
 add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ccwait
 add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ccinv
 add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ccwrite
 add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/cctrans
 add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ccsnoopaddr
-add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ramWEN
-add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ramREN
-add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ramstate
-add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ramaddr
-add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ramstore
-add wave -noupdate -group MemCTRL /system_tb/DUT/CPU/ccif/ramload
 TreeUpdate [SetDefaultTree]
 quietly WaveActivateNextPane
 add wave -noupdate -divider Core1
@@ -197,7 +202,7 @@ add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/ccwrite
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/cctrans
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/ccsnoopaddr
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {85471 ps} 0}
+WaveRestoreCursors {{Cursor 1} {115733 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
