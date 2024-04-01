@@ -48,7 +48,7 @@ program test(
         dcif.dmemstore = 0;
         dcif.dmemaddr = 0;
         cif.dload = 0;
-        cif.dwait = 1;
+        cif.dwait = 0;
         cif.ccwait = 0;
         cif.ccinv = 0;
         cif.ccsnoopaddr = '0;
@@ -153,13 +153,36 @@ program test(
         dcif.dmemstore = 32'habcd;
         dcif.dmemWEN = 1;
         cif.dwait = 1;
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
-        @(posedge CLK);
+        repeat (4) @(posedge CLK);
+        cif.dwait = 0;
+        repeat (6) @(posedge CLK);
+        cif.dwait = 1;
+        dcif.dmemWEN = 0;
+        #(PERIOD*3);
+
+
+        testType = "Write into index 3, set 0 of cache"; // miss
+        inputReset();
+        instReq(10, 3, 1);
+        dcif.dmemstore = 32'habcd;
+        dcif.dmemWEN = 1;
+        cif.dwait = 1;
+        repeat (4) @(posedge CLK);
         cif.dwait = 0;
         @(posedge CLK);
         @(posedge CLK);
+        cif.dwait = 1;
+        dcif.dmemWEN = 0;
+        #(PERIOD*3);
+
+        testType = "Snoop Address Match"; // miss
+        inputReset();
+        instReq(10, 4, 1);
+        dcif.dmemstore = 32'habcd;
+        dcif.dmemWEN = 1;
+        cif.dwait = 1;
+        repeat (4) @(posedge CLK);
+        cif.dwait = 0;
         @(posedge CLK);
         @(posedge CLK);
         cif.dwait = 1;
