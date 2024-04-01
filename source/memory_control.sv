@@ -120,10 +120,11 @@ module memory_control (
       SNOOP:
       begin
         ccif.ccinv[~core] = ccif.ccwrite[core];
-        ccif.ccwait[core] = ccif.ccwrite[core];
+        //ccif.ccwait[core] = ccif.ccwrite[core];
         ccif.ccsnoopaddr[~core] = ccif.daddr[core];
         if(!ccif.cctrans[~core])
         begin
+          ccif.ccwait[~core] = 1; //use as a way for snooped core to go check itself
           nstate = ENDSNOOP;
         end
         else
