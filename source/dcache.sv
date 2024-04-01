@@ -21,12 +21,17 @@ module dcache(
     logic WENfirst, RENfirst;
     //logic cif.dwait;
 
-    dcachef_t addr, oldaddr;
+    dcachef_t addr, oldaddr, snoopaddr;
 
     assign addr.bytoff = dcif.dmemaddr[1:0];
     assign addr.blkoff = dcif.dmemaddr[2];
     assign addr.idx = dcif.dmemaddr[5:3];
     assign addr.tag = dcif.dmemaddr[31:6];
+
+    assign snoopaddr.bytoff = cif.ccsnoopaddr[1:0];
+    assign snoopaddr.blkoff = cif.ccsnoopaddr[2];
+    assign snoopaddr.idx = cif.ccsnoopaddr[5:3];
+    assign snoopaddr.tag = cif.ccsnoopaddr[31:6];
 
     assign oldaddr.tag = dcache[LRU[addr.idx]][addr.idx].tag;
     // assign equal = cif.daddr == dcif.dmemaddr;
@@ -250,7 +255,11 @@ module dcache(
 
                 //miss = 1;
                 ndREN = 1;
-                cif.cctrans = dcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].dirty;
+                if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag || dcache[1][snoopaddr.idx].tag == snoopaddr.tag)
+                begin
+                    cif.cctrans = 1;
+                end
+                // cif.cctrans = dcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].dirty;
 
                 ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
                 if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
@@ -268,7 +277,7 @@ module dcache(
             begin
                 if(dcif.dmemWEN && WENfirst)
                 begin
-                    ndcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].valid = 0; //no longer using cc.inv 
+                    ndcache[LRU[snoopaddr.idx]][snoopaddr.idx].valid = 0; //no longer using cc.inv 
 
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
                     ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = dcif.dmemstore;

@@ -187,7 +187,7 @@ module memory_control (
         if(ccif.dREN[core] || ccif.ccwrite[core])
         begin
           ccif.ramREN = 1;
-          ccif.dload = ccif.ramload;
+          ccif.dload[core] = ccif.ramload;
         end
         else if(ccif.dWEN[core])
         begin
@@ -208,7 +208,7 @@ module memory_control (
         if(ccif.dREN[core] || ccif.ccwrite[core])
         begin
           ccif.ramREN = 1;
-          ccif.dload = ccif.ramload;
+          ccif.dload[core] = ccif.ramload;
         end
         else if(ccif.dWEN[core])
         begin
