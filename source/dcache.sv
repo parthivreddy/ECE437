@@ -143,6 +143,7 @@ module dcache(
         dcif.dhit = 0;
         dcif.dmemload = 0;
         dcif.flushed = 0;
+        cif.cctrans = 0;
 
         
 

@@ -25,8 +25,6 @@ module memory_control (
   typedef enum logic [3:0] {IDLE, ILOAD, REQUEST, SNOOP, ENDSNOOP, CTC, SDAT0, SDAT1, DAT0, DAT1, ARB} st;
 
   st state, nstate;
-  logic LRU_PC, nLRU_PC;
-  logic validLRU, nvalidLRU;
   logic core, ncore;
 
 
@@ -34,24 +32,18 @@ module memory_control (
     if(!nRST)
     begin
       state <= IDLE;
-      LRU_PC <= 0;
       core <= 0;
-      validLRU <= 0;
     end
     else
     begin
       state <= nstate;
-      LRU_PC <= nLRU_PC;
       core <= ncore;
-      validLRU <= nvalidLRU;
     end
   end
 
   always_comb begin : BUS
     nstate = state;
-    nLRU_PC = LRU_PC;
     ncore = core;
-    nvalidLRU = validLRU;
 
     ccif.iwait = 1;
     ccif.dwait = 1;
