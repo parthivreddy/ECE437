@@ -43,7 +43,6 @@ module dcache(
     state nState;
 
     assign cif.ccwrite = dcif.dmemWEN;
-    assign ndcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].valid = !ccif.inv;
 
     always_ff @(posedge CLK, negedge nRST) begin : nST
         if(!nRST)
@@ -268,7 +267,7 @@ module dcache(
             begin
                 if(dcif.dmemWEN && WENfirst)
                 begin
-                    ndcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].valid = !ccif.inv;
+                    ndcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].valid = 0; //no longer using cc.inv 
 
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
                     ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = dcif.dmemstore;
