@@ -277,7 +277,15 @@ module dcache(
             begin
                 if(dcif.dmemWEN && WENfirst)
                 begin
-                    ndcache[LRU[snoopaddr.idx]][snoopaddr.idx].valid = 0; //no longer using cc.inv 
+                    if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag)
+                    begin
+                        ndcache[0][snoopaddr.idx].valid = 0;
+                    end
+                    else if(dcache[1][snoopaddr.idx].tag == snoopaddr.tag)
+                    begin
+                        ndcache[1][snoopaddr.idx].valid = 0;
+                    end
+                    // ndcache[LRU[snoopaddr.idx]][snoopaddr.idx].valid = 0; //no longer using cc.inv 
 
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
                     ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = dcif.dmemstore;

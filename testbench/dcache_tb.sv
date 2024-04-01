@@ -42,6 +42,14 @@ program test(
         dcif.dmemaddr = {tag, idx, block_offset, 1'b0, 1'b0};
     endtask
 
+    task snoopTag;
+        input [25:0] tag;
+        input [2:0] idx;
+        input block_offset;
+        
+        cif.ccsnoopaddr = {tag, idx, block_offset, 1'b0, 1'b0};
+    endtask
+
     task inputReset;
         dcif.dmemREN = 0;
         dcif.dmemWEN = 0;
@@ -161,23 +169,26 @@ program test(
         #(PERIOD*3);
 
 
-        testType = "Write into index 3, set 0 of cache"; // miss
+        testType = "Overwrite index 3, set 1 of cache"; // miss
         inputReset();
-        instReq(10, 3, 1);
-        dcif.dmemstore = 32'habcd;
-        dcif.dmemWEN = 1;
+        instReq(15, 3, 1);
+        cif.dload = 32'heeee;
+        dcif.dmemREN = 1;
         cif.dwait = 1;
-        repeat (4) @(posedge CLK);
+        @(posedge CLK);
         cif.dwait = 0;
         @(posedge CLK);
-        @(posedge CLK);
         cif.dwait = 1;
-        dcif.dmemWEN = 0;
+        @(posedge CLK);
+        cif.dwait = 0;
+        repeat (7) @(posedge CLK);
+        dcif.dmemREN = 0;
         #(PERIOD*3);
 
         testType = "Snoop Address Match"; // miss
         inputReset();
         instReq(10, 4, 1);
+        snoopTag(15, 3, 1);
         dcif.dmemstore = 32'habcd;
         dcif.dmemWEN = 1;
         cif.dwait = 1;
