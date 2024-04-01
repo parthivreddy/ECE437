@@ -43,7 +43,7 @@ module dcache(
     state nState;
 
     assign cif.ccwrite = dcif.dmemWEN;
-    assign dcache[LRU[cif.ccsnoopaddr[5:3]]].valid = !ccif.inv;
+    assign ndcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].valid = !ccif.inv;
 
     always_ff @(posedge CLK, negedge nRST) begin : nST
         if(!nRST)
@@ -246,10 +246,12 @@ module dcache(
             ALLOCATE1: //Taking RAM data and putting it into LRU cache
             //Swap ALLOCATE1 and ALLOCATE2
             begin
-                //need to wait for RAM
+                //need to wait for RAMx
+
                 //miss = 1;
                 ndREN = 1;
-                cif.cctrans = dcache[LRU[addr.idx]].dirty;
+                cif.cctrans = dcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].dirty;
+
                 ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
                 if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
                 begin
@@ -266,6 +268,8 @@ module dcache(
             begin
                 if(dcif.dmemWEN && WENfirst)
                 begin
+                    ndcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].valid = !ccif.inv;
+
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
                     ndcache[LRU[addr.idx]][addr.idx].data[addr.blkoff] = dcif.dmemstore;
                     ndcache[LRU[addr.idx]][addr.idx].valid = 1;
@@ -396,7 +400,7 @@ module dcache(
                 // end
                 if (index == 7 && endSet == 1)
                 begin
-                    nState = WCOUNT;
+                    nState = HALT;
                 end
                 else if (index == 7)
                 begin
@@ -410,16 +414,16 @@ module dcache(
                 end
 
             end
-            WCOUNT:
-            begin
-                ndWEN = 1;
-                ndaddr = 32'h3100;
-                ndstore = hit_counter;
-                if (!cif.dwait && cif.daddr == 32'h3100)
-                begin
-                    nState = HALT;
-                end
-            end
+            // WCOUNT:
+            // begin
+            //     ndWEN = 1;
+            //     ndaddr = 32'h3100;
+            //     ndstore = hit_counter;
+            //     if (!cif.dwait && cif.daddr == 32'h3100)
+            //     begin
+            //         nState = HALT;
+            //     end
+            // end
             HALT:
             begin
                 dcif.flushed = 1;

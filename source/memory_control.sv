@@ -75,11 +75,6 @@ module memory_control (
           ncore = ccif.dREN[1] && !ccif.dREN[0];
           nstate = REQUEST;
         end
-        else if(ccif.ccwrite)
-        begin
-          ncore = ccif.ccwrite[1] && !ccif.ccwrite[0];
-          nstate = REQUEST;
-        end
         else if(ccif.dWEN)
         begin
           ncore = ccif.dWEN[1] && !ccif.dWEN[0];
@@ -186,14 +181,10 @@ module memory_control (
           nstate = ENDSNOOP;
         end
       end
-
       ENDSNOOP:
       begin
         ccif.ccinv[~core] = 0;
         ccif.ccwait[core] = 0;
-        // ccif.ccinv[~core] = ccif.ccwrite[core]; // might not need to actually extend the signals for this long
-        // ccif.ccwait[core] = ccif.ccwrite[core];
-        // ccif.ccsnoopaddr[~core] = ccif.daddr[core];
         nstate = DAT0;
       end
 
