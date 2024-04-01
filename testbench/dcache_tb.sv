@@ -8,7 +8,7 @@ module dcache_tb;
     logic CLK = 0;
 
     always #(PERIOD/2) CLK++;
-    caches_if cif0();
+    caches_if cif();
     datapath_cache_if dcif();
     test PROG(CLK, nRST, dcif, cif);
     dcache DUT(CLK, nRST, dcif, cif);
