@@ -9,6 +9,11 @@ add wave -noupdate /dcache_tb/cif/dWEN
 add wave -noupdate /dcache_tb/cif/dload
 add wave -noupdate /dcache_tb/cif/dstore
 add wave -noupdate /dcache_tb/cif/daddr
+add wave -noupdate -color Aquamarine /dcache_tb/cif/ccwait
+add wave -noupdate -color Aquamarine /dcache_tb/cif/ccinv
+add wave -noupdate -color Aquamarine /dcache_tb/cif/ccwrite
+add wave -noupdate -color Aquamarine /dcache_tb/cif/cctrans
+add wave -noupdate -color Aquamarine /dcache_tb/cif/ccsnoopaddr
 add wave -noupdate -divider {Datapath Side}
 add wave -noupdate /dcache_tb/dcif/halt
 add wave -noupdate /dcache_tb/dcif/dhit
@@ -22,7 +27,7 @@ add wave -noupdate /dcache_tb/dcif/dmemaddr
 add wave -noupdate -divider {Internal Registers}
 add wave -noupdate /dcache_tb/DUT/CLK
 add wave -noupdate /dcache_tb/DUT/nRST
-add wave -noupdate -expand -subitemconfig {{/dcache_tb/DUT/dcache[0]} -expand} /dcache_tb/DUT/dcache
+add wave -noupdate -expand -subitemconfig {{/dcache_tb/DUT/dcache[1]} {-color Yellow -expand} {/dcache_tb/DUT/dcache[1][7]} {-color Yellow} {/dcache_tb/DUT/dcache[1][6]} {-color Yellow} {/dcache_tb/DUT/dcache[1][5]} {-color Yellow} {/dcache_tb/DUT/dcache[1][4]} {-color Yellow} {/dcache_tb/DUT/dcache[1][3]} {-color Yellow} {/dcache_tb/DUT/dcache[1][2]} {-color Yellow} {/dcache_tb/DUT/dcache[1][1]} {-color Yellow} {/dcache_tb/DUT/dcache[1][0]} {-color Yellow} {/dcache_tb/DUT/dcache[0]} -expand} /dcache_tb/DUT/dcache
 add wave -noupdate /dcache_tb/DUT/ndcache
 add wave -noupdate -radix binary /dcache_tb/DUT/LRU
 add wave -noupdate -radix binary /dcache_tb/DUT/nLRU
@@ -32,10 +37,12 @@ add wave -noupdate /dcache_tb/DUT/nIndex
 add wave -noupdate /dcache_tb/DUT/addr
 add wave -noupdate /dcache_tb/DUT/currState
 add wave -noupdate /dcache_tb/DUT/nState
+add wave -noupdate -color Salmon /dcache_tb/DUT/firstSt
+add wave -noupdate -color Salmon /dcache_tb/DUT/nfirstSt
 add wave -noupdate /dcache_tb/PROG/testType
 add wave -noupdate /dcache_tb/PROG/inReset
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {72 ns} 0}
+WaveRestoreCursors {{Cursor 1} {26 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 286
@@ -51,4 +58,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {55 ns} {181 ns}
+WaveRestoreZoom {0 ns} {126 ns}
