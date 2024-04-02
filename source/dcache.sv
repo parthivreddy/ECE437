@@ -47,7 +47,7 @@ module dcache(
     state currState;
     state nState;
 
-    logic check;
+    logic check, checkFF;
 
     assign cif.ccwrite = dcif.dmemWEN;
 
@@ -67,6 +67,7 @@ module dcache(
             cif.dREN <= 0;
             dmemRENFF <= 0;
             //cif.dwait <= 0;
+            checkFF <= 0;
         end
         else
         begin
@@ -82,6 +83,7 @@ module dcache(
             cif.dWEN <= ndWEN;
             cif.dREN <= ndREN;
             dmemRENFF <= dcif.dmemREN;
+            checkFF <= check;
             //cif.dwait <= cif.dwait;
         end
     end
@@ -408,7 +410,7 @@ module dcache(
             begin
                 if(dcache[endSet][index].dirty)
                 begin
-                    if(!check)
+                    if(!checkFF) //most likely have to latch check for syn
                     begin
                         ndWEN = 1;
                         ndaddr = {dcache[endSet][index].tag, index, 3'b0};
@@ -430,7 +432,7 @@ module dcache(
             end
             ENDWR2:
             begin
-                if(!check)
+                if(!checkFF)
                 begin
                     ndWEN = 1;
                     ndaddr = {dcache[endSet][index].tag, index, 1'b1, 2'b0};

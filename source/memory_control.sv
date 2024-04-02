@@ -179,7 +179,6 @@ module memory_control (
         
         if(wait2)
         begin
-        
           ccif.ramWEN = 1;
           ccif.ramaddr = ccif.ccsnoopaddr[~core];
           ccif.ramstore = ccif.dstore[~core];
