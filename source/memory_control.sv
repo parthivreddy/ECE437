@@ -163,10 +163,10 @@ module memory_control (
       begin
         ccif.ccinv[~core] = ccif.ccwrite[core];
         ccif.ccwait[core] = ccif.ccwrite[core];
-        ccif.ccsnoopaddr[~core] = ccif.daddr[core];
+        ccif.ccsnoopaddr[~core] = ccif.daddr[core] + 4;
         
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[~core];
+        ccif.ramaddr = ccif.daddr[~core] + 4;
         ccif.ramstore = ccif.dstore[~core];
 
         if(ccif.ramstate == ACCESS)
