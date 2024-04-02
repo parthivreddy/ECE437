@@ -132,6 +132,17 @@ module dcache(
     //     end
     // end
 
+    always_comb begin : CC
+        if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid && dcache[0][snoopaddr.idx].dirty || dcache[1][snoopaddr.idx].tag == snoopaddr.tag && dcache[1][snoopaddr.idx].valid && dcache[1][snoopaddr.idx].dirty)
+        begin
+            cif.cctrans = 1;
+        end
+        else
+        begin
+            cif.cctrans = 0;
+        end
+    end
+
     always_comb begin : CMBLGC
         nState = currState;
         ndcache = dcache;
@@ -148,7 +159,18 @@ module dcache(
         dcif.dhit = 0;
         dcif.dmemload = 0;
         dcif.flushed = 0;
-        cif.cctrans = 0;
+
+        if(cif.ccinv)
+        begin
+            if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid)
+            begin
+                ndcache[0][snoopaddr.idx].valid = 0;
+            end
+            else if(dcache[1][snoopaddr.idx] == snoopaddr.tag && dcache[1][snoopaddr.idx].valid)
+            begin
+                ndcache[1][snoopaddr.idx].valid = 0;
+            end
+        end
 
         
 
@@ -255,10 +277,6 @@ module dcache(
 
                 //miss = 1;
                 ndREN = 1;
-                if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag || dcache[1][snoopaddr.idx].tag == snoopaddr.tag)
-                begin
-                    cif.cctrans = 1;
-                end
                 // cif.cctrans = dcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].dirty;
 
                 ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};

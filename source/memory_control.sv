@@ -55,9 +55,9 @@ module memory_control (
     ccif.ramREN = 0;
 
     //signals staying the same
-    ccif.ccinv = 0;
-    ccif.ccwait = 0;
-    ccif.ccsnoopaddr = 0;
+    ccif.ccinv = '0;
+    ccif.ccwait = '0;
+    ccif.ccsnoopaddr = '0;
 
     case(state)
       IDLE:
@@ -163,10 +163,10 @@ module memory_control (
       begin
         ccif.ccinv[~core] = ccif.ccwrite[core];
         ccif.ccwait[core] = ccif.ccwrite[core];
-        ccif.ccsnoopaddr[~core] = ccif.daddr[core] + 4;
+        ccif.ccsnoopaddr[~core] = ccif.daddr[core] ^ 32'b100;
         
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[~core] + 4;
+        ccif.ramaddr = ccif.daddr[~core] ^ 32'b100;
         ccif.ramstore = ccif.dstore[~core];
 
         if(ccif.ramstate == ACCESS)
