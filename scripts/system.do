@@ -83,6 +83,8 @@ add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/dWEN
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/dREN
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/dload
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/dstore
+add wave -noupdate -group dcache /system_tb/DUT/CPU/CM0/DCACHE/ndstore
+add wave -noupdate -group dcache /system_tb/DUT/CPU/CM0/DCACHE/check
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/daddr
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/ccsnoopaddr
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif0/ccwait
@@ -195,6 +197,8 @@ add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/dREN
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/dWEN
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/dload
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/dstore
+add wave -noupdate -group dcache /system_tb/DUT/CPU/CM1/DCACHE/check
+add wave -noupdate -group dcache /system_tb/DUT/CPU/CM1/DCACHE/ndstore
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/daddr
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/ccwait
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/ccinv
@@ -202,7 +206,7 @@ add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/ccwrite
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/cctrans
 add wave -noupdate -group dcache /system_tb/DUT/CPU/cif1/ccsnoopaddr
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {115733 ps} 0}
+WaveRestoreCursors {{Cursor 1} {1315222883 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -218,4 +222,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {265 ns}
+WaveRestoreZoom {1315148250 ps} {1315413250 ps}

@@ -47,6 +47,8 @@ module dcache(
     state currState;
     state nState;
 
+    logic check;
+
     assign cif.ccwrite = dcif.dmemWEN;
 
     always_ff @(posedge CLK, negedge nRST) begin : nST
@@ -150,6 +152,7 @@ module dcache(
         nIndex = index;
         nhit_counter = hit_counter;
         nEndSet = endSet;
+        check = 0;
 
         ndREN = 0;
         ndWEN = 0;
@@ -165,12 +168,34 @@ module dcache(
             if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid)
             begin
                 ndcache[0][snoopaddr.idx].valid = 0;
+                ndcache[0][snoopaddr.idx].dirty = 0;
+                ndstore = dcache[0][snoopaddr.idx].data[snoopaddr.blkoff];
+                check = 1;
             end
             else if(dcache[1][snoopaddr.idx] == snoopaddr.tag && dcache[1][snoopaddr.idx].valid)
             begin
                 ndcache[1][snoopaddr.idx].valid = 0;
+                ndcache[1][snoopaddr.idx].dirty = 0;
+                ndstore = dcache[1][snoopaddr.idx].data[snoopaddr.blkoff];
+                check = 1;
             end
         end
+        else
+        begin
+            if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid)
+            begin
+                ndcache[0][snoopaddr.idx].dirty = 0;
+                ndstore = dcache[0][snoopaddr.idx].data[snoopaddr.blkoff];
+                check = 1;
+            end
+            else if(dcache[1][snoopaddr.idx] == snoopaddr.tag && dcache[1][snoopaddr.idx].valid)
+            begin
+                ndcache[1][snoopaddr.idx].dirty = 0;
+                ndstore = dcache[1][snoopaddr.idx].data[snoopaddr.blkoff];
+                check = 1;
+            end
+        end
+
 
         
 
@@ -295,14 +320,6 @@ module dcache(
             begin
                 if(dcif.dmemWEN && WENfirst)
                 begin
-                    if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag)
-                    begin
-                        ndcache[0][snoopaddr.idx].valid = 0;
-                    end
-                    else if(dcache[1][snoopaddr.idx].tag == snoopaddr.tag)
-                    begin
-                        ndcache[1][snoopaddr.idx].valid = 0;
-                    end
                     // ndcache[LRU[snoopaddr.idx]][snoopaddr.idx].valid = 0; //no longer using cc.inv 
 
                     ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;

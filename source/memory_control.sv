@@ -150,7 +150,7 @@ module memory_control (
         ccif.ccsnoopaddr[~core] = ccif.daddr[core];
 
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[~core];
+        ccif.ramaddr = ccif.ccsnoopaddr[~core];
         ccif.ramstore = ccif.dstore[~core];
 
         if(ccif.ramstate == ACCESS)
@@ -166,7 +166,7 @@ module memory_control (
         ccif.ccsnoopaddr[~core] = ccif.daddr[core] ^ 32'b100;
         
         ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[~core] ^ 32'b100;
+        ccif.ramaddr = ccif.daddr[core] ^ 32'b100;
         ccif.ramstore = ccif.dstore[~core];
 
         if(ccif.ramstate == ACCESS)
@@ -184,7 +184,7 @@ module memory_control (
       DAT0:
       begin
         ccif.ramaddr = ccif.daddr[core];
-        if(ccif.dREN[core] || ccif.ccwrite[core])
+        if(ccif.dREN[core])
         begin
           ccif.ramREN = 1;
           ccif.dload[core] = ccif.ramload;
@@ -205,7 +205,7 @@ module memory_control (
       DAT1:
       begin
         ccif.ramaddr = ccif.daddr[core];
-        if(ccif.dREN[core] || ccif.ccwrite[core])
+        if(ccif.dREN[core])
         begin
           ccif.ramREN = 1;
           ccif.dload[core] = ccif.ramload;
