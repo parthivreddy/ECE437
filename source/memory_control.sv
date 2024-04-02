@@ -26,6 +26,7 @@ module memory_control (
 
   st state, nstate;
   logic core, ncore;
+  logic wait1, wait2, nwait1, nwait2;
 
 
   always_ff @(posedge CLK, negedge nRST) begin : NLGC
@@ -33,11 +34,15 @@ module memory_control (
     begin
       state <= IDLE;
       core <= 0;
+      wait1 <= 0;
+      wait2 <= 0;
     end
     else
     begin
       state <= nstate;
       core <= ncore;
+      wait1 <= nwait1;
+      wait2 <= nwait2;
     end
   end
 
@@ -58,6 +63,9 @@ module memory_control (
     ccif.ccinv = '0;
     ccif.ccwait = '0;
     ccif.ccsnoopaddr = '0;
+
+    nwait1 = 0;
+    nwait2 = 0;
 
     case(state)
       IDLE:
@@ -145,13 +153,16 @@ module memory_control (
       
       SDAT0:
       begin
+        nwait1 = 1;
         ccif.ccinv[~core] = ccif.ccwrite[core];
         ccif.ccwait[core] = ccif.ccwrite[core];
         ccif.ccsnoopaddr[~core] = ccif.daddr[core];
-
-        ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.ccsnoopaddr[~core];
-        ccif.ramstore = ccif.dstore[~core];
+        if(wait1)
+        begin
+          ccif.ramWEN = 1;
+          ccif.ramaddr = ccif.ccsnoopaddr[~core];
+          ccif.ramstore = ccif.dstore[~core];
+        end
 
         if(ccif.ramstate == ACCESS)
         begin
@@ -161,13 +172,18 @@ module memory_control (
 
       SDAT1:
       begin
+        nwait2 = 1;
         ccif.ccinv[~core] = ccif.ccwrite[core];
         ccif.ccwait[core] = ccif.ccwrite[core];
         ccif.ccsnoopaddr[~core] = ccif.daddr[core] ^ 32'b100;
         
-        ccif.ramWEN = 1;
-        ccif.ramaddr = ccif.daddr[core] ^ 32'b100;
-        ccif.ramstore = ccif.dstore[~core];
+        if(wait2)
+        begin
+        
+          ccif.ramWEN = 1;
+          ccif.ramaddr = ccif.ccsnoopaddr[~core];
+          ccif.ramstore = ccif.dstore[~core];
+        end
 
         if(ccif.ramstate == ACCESS)
         begin

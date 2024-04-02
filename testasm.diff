@@ -388,3 +388,92 @@ processing file asmFiles/test.coherence2.asm (2 of 2)
  :040103000000DEAD6D
  :040105000000BEEF49
  :00000001FF
+processing file asmFiles/test.coherence1.asm (1 of 2)
+--- memsim.hex	2024-04-01 23:29:51.839568485 -0400
++++ memcpu.hex	2024-04-01 23:29:51.821567835 -0400
+@@ -17,7 +17,5 @@
+ :04008700AD090000BF
+ :04008800FFFFFFFF78
+ :04010000DEADBEEFC3
+-:0401010089ABCDEF0A
+-:040102000123456729
+ :04010300CAB1FEED92
+ :00000001FF
+processing file asmFiles/test.coherence2.asm (2 of 2)
+--- memsim.hex	2024-04-01 23:29:53.008610673 -0400
++++ memcpu.hex	2024-04-01 23:29:52.984609807 -0400
+@@ -18,7 +18,7 @@
+ :04008500340A000138
+ :04008600AD2A00009F
+ :04008700FFFFFFFF79
+-:0401000000000001FA
++:040100000000BEEF4E
+ :04010200DEADBEEFC1
+ :040103000000DEAD6D
+ :040105000000BEEF49
+processing file asmFiles/test.coherence1.asm (1 of 2)
+processing file asmFiles/test.coherence2.asm (2 of 2)
+--- memsim.hex	2024-04-01 23:40:09.087835068 -0400
++++ memcpu.hex	2024-04-01 23:40:09.073834564 -0400
+@@ -18,8 +18,8 @@
+ :04008500340A000138
+ :04008600AD2A00009F
+ :04008700FFFFFFFF79
+-:0401000000000001FA
+-:04010200DEADBEEFC1
++:040100000000BEEF4E
++:04010200DEADDEADE3
+ :040103000000DEAD6D
+ :040105000000BEEF49
+ :00000001FF
+processing file asmFiles/core.IM.MI.asm (1 of 5)
+processing file asmFiles/core.IM.MI.asm (1 of 5)
+processing file asmFiles/core.IM.MS.asm (2 of 5)
+processing file asmFiles/core.IS.SS.asm (3 of 5)
+processing file asmFiles/core.MM.asm (4 of 5)
+processing file asmFiles/core.SM.SI.asm (5 of 5)
+processing file asmFiles/test.coherence1.asm (1 of 2)
+processing file asmFiles/test.coherence2.asm (2 of 2)
+--- memsim.hex	2024-04-01 23:40:38.134880391 -0400
++++ memcpu.hex	2024-04-01 23:40:38.117879777 -0400
+@@ -18,8 +18,8 @@
+ :04008500340A000138
+ :04008600AD2A00009F
+ :04008700FFFFFFFF79
+-:0401000000000001FA
+-:04010200DEADBEEFC1
++:040100000000BEEF4E
++:04010200DEADDEADE3
+ :040103000000DEAD6D
+ :040105000000BEEF49
+ :00000001FF
+processing file asmFiles/test.coherence1.asm (1 of 2)
+processing file asmFiles/test.coherence2.asm (2 of 2)
+--- memsim.hex	2024-04-01 23:42:10.224203599 -0400
++++ memcpu.hex	2024-04-01 23:42:10.207202985 -0400
+@@ -18,7 +18,7 @@
+ :04008500340A000138
+ :04008600AD2A00009F
+ :04008700FFFFFFFF79
+-:0401000000000001FA
++:040100000000BEEF4E
+ :04010200DEADBEEFC1
+ :040103000000DEAD6D
+ :040105000000BEEF49
+processing file asmFiles/test.coherence1.asm (1 of 2)
+processing file asmFiles/test.coherence2.asm (2 of 2)
+processing file asmFiles/test.coherence1.asm (1 of 2)
+processing file asmFiles/test.coherence2.asm (2 of 2)
+--- memsim.hex	2024-04-01 23:48:52.785730328 -0400
++++ memcpu.hex	2024-04-01 23:48:52.768729715 -0400
+@@ -19,7 +19,7 @@
+ :04008600AD2A00009F
+ :04008700FFFFFFFF79
+ :0401000000000001FA
+-:04010200DEADBEEFC1
++:04010200DEADDEADE3
+ :040103000000DEAD6D
+ :040105000000BEEF49
+ :00000001FF
+processing file asmFiles/test.coherence1.asm (1 of 2)
+processing file asmFiles/test.coherence2.asm (2 of 2)

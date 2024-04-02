@@ -157,7 +157,7 @@ module dcache(
         ndREN = 0;
         ndWEN = 0;
         ndaddr = 0;
-        ndstore = 0;
+        ndstore = cif.dstore;
 
         dcif.dhit = 0;
         dcif.dmemload = 0;
@@ -408,9 +408,12 @@ module dcache(
             begin
                 if(dcache[endSet][index].dirty)
                 begin
-                    ndWEN = 1;
-                    ndaddr = {dcache[endSet][index].tag, index, 3'b0};
-                    ndstore = dcache[endSet][index].data[0];
+                    if(!check)
+                    begin
+                        ndWEN = 1;
+                        ndaddr = {dcache[endSet][index].tag, index, 3'b0};
+                        ndstore = dcache[endSet][index].data[0];
+                    end 
                     if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 3'b0} && cif.dWEN)
                     begin
                         nState = ENDWR2;
@@ -427,9 +430,12 @@ module dcache(
             end
             ENDWR2:
             begin
-                ndWEN = 1;
-                ndaddr = {dcache[endSet][index].tag, index, 1'b1, 2'b0};
-                ndstore = dcache[endSet][index].data[1];
+                if(!check)
+                begin
+                    ndWEN = 1;
+                    ndaddr = {dcache[endSet][index].tag, index, 1'b1, 2'b0};
+                    ndstore = dcache[endSet][index].data[1];
+                end
                 if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 1'b1, 2'b0} && cif.dWEN)
                 begin
                     nState = INCRCNT;
