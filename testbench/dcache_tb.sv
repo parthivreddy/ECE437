@@ -185,12 +185,43 @@ program test(
         dcif.dmemREN = 0;
         #(PERIOD*3);
 
-        testType = "Snoop Address Match"; // miss
+        testType = "Snoop Address Miss"; // miss
         inputReset();
         instReq(10, 4, 1);
         snoopTag(15, 3, 1);
         dcif.dmemstore = 32'habcd;
         dcif.dmemWEN = 1;
+        cif.dwait = 1;
+        repeat (4) @(posedge CLK);
+        cif.dwait = 0;
+        @(posedge CLK);
+        @(posedge CLK);
+        cif.dwait = 1;
+        dcif.dmemWEN = 0;
+        #(PERIOD*3);
+
+        testType = "Snoop Address Match (cctrans)";
+        inputReset();
+        instReq(10, 4, 1);
+        snoopTag(12, 3, 1);
+        dcif.dmemstore = 32'h12345678;
+        dcif.dmemWEN = 1;
+        cif.dwait = 1;
+        repeat (4) @(posedge CLK);
+        cif.dwait = 0;
+        @(posedge CLK);
+        @(posedge CLK);
+        cif.dwait = 1;
+        dcif.dmemWEN = 0;
+        #(PERIOD*3);
+
+        testType = "Snoop Address Invalidate";
+        inputReset();
+        // instReq(10, 4, 1);
+        snoopTag(10, 4, 1);
+        // cif.dmemload = 32'h87654321;
+        // dcif.dmemREN = 1;
+        cif.ccinv = 1;
         cif.dwait = 1;
         repeat (4) @(posedge CLK);
         cif.dwait = 0;
