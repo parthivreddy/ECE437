@@ -114,11 +114,12 @@ m_5:  # right copy
 m_end:
   jr    $ra
 #--------------------------------------
-
+org 0x200
+halt
 
 org 0x300
 size:
-cfw 64
+cfw 3
 data:
 cfw 90
 cfw 81
@@ -187,3 +188,4 @@ cfw 67
 
 org 0x500
 sorted:
+

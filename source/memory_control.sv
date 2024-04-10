@@ -22,11 +22,12 @@ module memory_control (
   // number of cpus for cc
   parameter CPUS = 1;
 
-  typedef enum logic [3:0] {IDLE, ILOAD, REQUEST, SNOOP, ENDSNOOP, CTC, SDAT0, SDAT1, DAT0, DAT1, ARB} st;
+  typedef enum logic [3:0] {IDLE, ILOAD, REQUEST, SNOOP, ENDSNOOP, CTC, SDAT0, SDAT1, DAT0, DAT1, DEL1, DEL2} st;
 
   st state, nstate;
   logic core, ncore;
   logic wait1, wait2, nwait1, nwait2;
+  logic [31:0] daddr0, ndaddr0;
 
 
   always_ff @(posedge CLK, negedge nRST) begin : NLGC
@@ -36,6 +37,7 @@ module memory_control (
       core <= 0;
       wait1 <= 0;
       wait2 <= 0;
+      daddr0 <= 0;
     end
     else
     begin
@@ -43,6 +45,7 @@ module memory_control (
       core <= ncore;
       wait1 <= nwait1;
       wait2 <= nwait2;
+      daddr0 <= ndaddr0;
     end
   end
 
@@ -66,6 +69,8 @@ module memory_control (
 
     nwait1 = 0;
     nwait2 = 0;
+
+    ndaddr0 = daddr0;
 
     case(state)
       IDLE:
@@ -113,7 +118,7 @@ module memory_control (
       
       REQUEST:
       begin
-        ccif.ccwait[core] = ccif.ccwrite[core];
+        //ccif.ccwait[core] = ccif.ccwrite[core];
         nstate = SNOOP;
       end
       
@@ -122,9 +127,10 @@ module memory_control (
         ccif.ccinv[~core] = ccif.ccwrite[core];
         //ccif.ccwait[core] = ccif.ccwrite[core];
         ccif.ccsnoopaddr[~core] = ccif.daddr[core];
+        ccif.ccwait[~core] = 1;
         if(!ccif.cctrans[~core])
         begin
-          ccif.ccwait[~core] = 1; //use as a way for snooped core to go check itself
+          //ccif.ccwait[~core] = 1; //use as a way for snooped core to go check itself
           nstate = ENDSNOOP;
         end
         else
@@ -155,7 +161,7 @@ module memory_control (
       begin
         nwait1 = 1;
         ccif.ccinv[~core] = ccif.ccwrite[core];
-        ccif.ccwait[core] = ccif.ccwrite[core];
+        ccif.ccwait[!core] = 1;
         ccif.ccsnoopaddr[~core] = ccif.daddr[core];
         if(wait1)
         begin
@@ -166,6 +172,7 @@ module memory_control (
 
         if(ccif.ramstate == ACCESS)
         begin
+          //ccif.ramWEN = 0;
           nstate = SDAT1;
         end
       end
@@ -174,7 +181,7 @@ module memory_control (
       begin
         nwait2 = 1;
         ccif.ccinv[~core] = ccif.ccwrite[core];
-        ccif.ccwait[core] = ccif.ccwrite[core];
+        ccif.ccwait[~core] = 1;
         ccif.ccsnoopaddr[~core] = ccif.daddr[core] ^ 32'b100;
         
         if(wait2)
@@ -186,19 +193,20 @@ module memory_control (
 
         if(ccif.ramstate == ACCESS)
         begin
+          //ccif.ramWEN = 0;
           nstate = ENDSNOOP;
         end
       end
       ENDSNOOP:
       begin
         ccif.ccinv[~core] = 0;
-        ccif.ccwait[core] = 0;
         nstate = DAT0;
       end
 
       DAT0:
       begin
         ccif.ramaddr = ccif.daddr[core];
+        ndaddr0 = ccif.daddr[core];
         if(ccif.dREN[core])
         begin
           ccif.ramREN = 1;
@@ -210,8 +218,10 @@ module memory_control (
           ccif.ramstore = ccif.dstore[core];
         end
 
-        if(ccif.ramstate == ACCESS)
+        if(ccif.ramstate == ACCESS) //perhaps don't advance on access. send signal from cache to advance
         begin
+          // ccif.ramWEN = 0;
+          // ccif.ramREN = 0;
           ccif.dwait[core] = 0;
           nstate = DAT1;
         end
@@ -231,9 +241,16 @@ module memory_control (
           ccif.ramstore = ccif.dstore[core];
         end
 
-        if(ccif.ramstate == ACCESS)
+        if((ccif.ramstate == ACCESS && daddr0 != ccif.ramaddr))
         begin
+          // ccif.ramWEN = 0;
+          // ccif.ramREN = 0;
           ccif.dwait[core] = 0;
+          nstate = IDLE;
+        end
+
+        if(ccif.ccwrite[core])
+        begin
           nstate = IDLE;
         end
       end

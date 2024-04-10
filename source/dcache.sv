@@ -137,7 +137,11 @@ module dcache(
     // end
 
     always_comb begin : CC
-        if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid && dcache[0][snoopaddr.idx].dirty || dcache[1][snoopaddr.idx].tag == snoopaddr.tag && dcache[1][snoopaddr.idx].valid && dcache[1][snoopaddr.idx].dirty)
+        if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid && dcache[0][snoopaddr.idx].dirty)
+        begin
+            cif.cctrans = 1;
+        end
+        else if(dcache[1][snoopaddr.idx].tag == snoopaddr.tag && dcache[1][snoopaddr.idx].valid && dcache[1][snoopaddr.idx].dirty)
         begin
             cif.cctrans = 1;
         end
@@ -167,30 +171,34 @@ module dcache(
 
         if(cif.ccinv)
         begin
-            if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid)
+            if(cif.ccwait && dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid)
             begin
                 ndcache[0][snoopaddr.idx].valid = 0;
                 ndcache[0][snoopaddr.idx].dirty = 0;
                 ndstore = dcache[0][snoopaddr.idx].data[snoopaddr.blkoff];
                 check = 1;
             end
-            else if(dcache[1][snoopaddr.idx] == snoopaddr.tag && dcache[1][snoopaddr.idx].valid)
+            else if(cif.ccwait && dcache[1][snoopaddr.idx].tag == snoopaddr.tag && dcache[1][snoopaddr.idx].valid)
             begin
                 ndcache[1][snoopaddr.idx].valid = 0;
                 ndcache[1][snoopaddr.idx].dirty = 0;
                 ndstore = dcache[1][snoopaddr.idx].data[snoopaddr.blkoff];
                 check = 1;
             end
+            // else 
+            // begin
+            //     ndache[LRU][snoopaddr.idx].valid = 0;
+            // end
         end
         else
         begin
-            if(dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid)
+            if(cif.ccwait && dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid)
             begin
                 ndcache[0][snoopaddr.idx].dirty = 0;
                 ndstore = dcache[0][snoopaddr.idx].data[snoopaddr.blkoff];
                 check = 1;
             end
-            else if(dcache[1][snoopaddr.idx] == snoopaddr.tag && dcache[1][snoopaddr.idx].valid)
+            else if(cif.ccwait && dcache[1][snoopaddr.idx].tag == snoopaddr.tag && dcache[1][snoopaddr.idx].valid)
             begin
                 ndcache[1][snoopaddr.idx].dirty = 0;
                 ndstore = dcache[1][snoopaddr.idx].data[snoopaddr.blkoff];
@@ -284,6 +292,7 @@ module dcache(
                 ndWEN = 1;
                 if(!cif.dwait && cif.daddr == {oldaddr.tag, addr.idx, addr.blkoff, addr.bytoff})
                 begin
+                    ndWEN = 0;
                     nState = WB2;
                 end
             end
@@ -294,6 +303,7 @@ module dcache(
                 ndWEN = 1;
                 if(!cif.dwait && cif.daddr == {oldaddr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
                 begin
+                    ndWEN = 0;
                     nState = ALLOCATE1;
                 end
             end
@@ -314,6 +324,7 @@ module dcache(
                     ndcache[LRU[addr.idx]][addr.idx].valid = 1;
                     ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
                     nState = ALLOCATE2;
+                    ndREN = 0;
                     // dcif.dhit = 1;
                     // nState = IDLE;
                 end
@@ -351,6 +362,7 @@ module dcache(
                         nLRU[addr.idx] = ~LRU[addr.idx];
                         dcif.dmemload = cif.dload;
                         nState = IDLE;
+                        ndREN = 0;
                         // nState = ALLOCATE2;
                     end
 
@@ -418,6 +430,7 @@ module dcache(
                     end 
                     if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 3'b0} && cif.dWEN)
                     begin
+                        ndWEN = 0;
                         nState = ENDWR2;
                     end
                     // else
@@ -440,6 +453,7 @@ module dcache(
                 end
                 if(!cif.dwait && cif.daddr == {dcache[endSet][index].tag, index, 1'b1, 2'b0} && cif.dWEN)
                 begin
+                    ndWEN = 0;
                     nState = INCRCNT;
                 end
             end

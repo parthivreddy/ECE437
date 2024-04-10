@@ -26,8 +26,11 @@ start:
   cfw 0
   cfw 1
 
+org 0x200
+halt
 #uncomment to work with the simulator (sim)
 # comment to use mmio
 
   org 0x0F00
   cfw 22
+

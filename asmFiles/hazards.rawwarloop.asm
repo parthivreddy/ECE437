@@ -18,3 +18,6 @@ addi $4, $4, -1
 bne $4, $0, start
 
 halt
+
+org 0x200
+halt
