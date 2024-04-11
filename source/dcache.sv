@@ -171,7 +171,25 @@ module dcache(
 
         if(cif.ccinv)
         begin
-            if(cif.ccwait && (dcache[0][snoopaddr.idx].tag == snoopaddr.tag) && dcache[0][snoopaddr.idx].valid)
+            if(cif.ccwait && dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid &&
+                dcache[1][snoopaddr.idx].valid && dcache[1][snoopaddr.idx].tag == snoopaddr.tag
+            )
+            begin
+                check = 1;   
+                if(dcache[0][snoopaddr.idx].dirty)
+                begin
+                    ndcache[0][snoopaddr.idx].valid = 0;
+                    ndcache[0][snoopaddr.idx].dirty = 0;
+                    ndstore = dcache[0][snoopaddr.idx].data[snoopaddr.blkoff];
+                end
+                else
+                begin
+                    ndcache[1][snoopaddr.idx].valid = 0;
+                    ndcache[1][snoopaddr.idx].dirty = 0;
+                    ndstore = dcache[1][snoopaddr.idx].data[snoopaddr.blkoff];
+                end
+            end
+            else if(cif.ccwait && (dcache[0][snoopaddr.idx].tag == snoopaddr.tag) && dcache[0][snoopaddr.idx].valid)
             begin
                 ndcache[0][snoopaddr.idx].valid = 0;
                 ndcache[0][snoopaddr.idx].dirty = 0;
@@ -192,7 +210,23 @@ module dcache(
         end
         else
         begin
-            if(cif.ccwait && (dcache[0][snoopaddr.idx].tag == snoopaddr.tag) && dcache[0][snoopaddr.idx].valid)
+            if(cif.ccwait && dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid &&
+                dcache[1][snoopaddr.idx].valid && dcache[1][snoopaddr.idx].tag == snoopaddr.tag
+            )
+            begin
+                check = 1;   
+                if(dcache[0][snoopaddr.idx].dirty)
+                begin
+                    ndcache[0][snoopaddr.idx].dirty = 0;
+                    ndstore = dcache[0][snoopaddr.idx].data[snoopaddr.blkoff];
+                end
+                else
+                begin
+                    ndcache[1][snoopaddr.idx].dirty = 0;
+                    ndstore = dcache[1][snoopaddr.idx].data[snoopaddr.blkoff];
+                end
+            end
+            else if(cif.ccwait && (dcache[0][snoopaddr.idx].tag == snoopaddr.tag) && dcache[0][snoopaddr.idx].valid)
             begin
                 ndcache[0][snoopaddr.idx].dirty = 0;
                 ndstore = dcache[0][snoopaddr.idx].data[snoopaddr.blkoff];
