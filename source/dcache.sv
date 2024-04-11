@@ -171,14 +171,14 @@ module dcache(
 
         if(cif.ccinv)
         begin
-            if(cif.ccwait && dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid)
+            if(cif.ccwait && (dcache[0][snoopaddr.idx].tag == snoopaddr.tag) && dcache[0][snoopaddr.idx].valid)
             begin
                 ndcache[0][snoopaddr.idx].valid = 0;
                 ndcache[0][snoopaddr.idx].dirty = 0;
                 ndstore = dcache[0][snoopaddr.idx].data[snoopaddr.blkoff];
                 check = 1;
             end
-            else if(cif.ccwait && dcache[1][snoopaddr.idx].tag == snoopaddr.tag && dcache[1][snoopaddr.idx].valid)
+            else if(cif.ccwait && (dcache[1][snoopaddr.idx].tag == snoopaddr.tag) && dcache[1][snoopaddr.idx].valid)
             begin
                 ndcache[1][snoopaddr.idx].valid = 0;
                 ndcache[1][snoopaddr.idx].dirty = 0;
@@ -192,13 +192,13 @@ module dcache(
         end
         else
         begin
-            if(cif.ccwait && dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid)
+            if(cif.ccwait && (dcache[0][snoopaddr.idx].tag == snoopaddr.tag) && dcache[0][snoopaddr.idx].valid)
             begin
                 ndcache[0][snoopaddr.idx].dirty = 0;
                 ndstore = dcache[0][snoopaddr.idx].data[snoopaddr.blkoff];
                 check = 1;
             end
-            else if(cif.ccwait && dcache[1][snoopaddr.idx].tag == snoopaddr.tag && dcache[1][snoopaddr.idx].valid)
+            else if(cif.ccwait && (dcache[1][snoopaddr.idx].tag == snoopaddr.tag) && dcache[1][snoopaddr.idx].valid)
             begin
                 ndcache[1][snoopaddr.idx].dirty = 0;
                 ndstore = dcache[1][snoopaddr.idx].data[snoopaddr.blkoff];
@@ -225,7 +225,28 @@ module dcache(
                 end
                 else if(dcif.dmemREN)
                 begin
-                    if(dcache[0][addr.idx].valid && dcache[0][addr.idx].tag == addr.tag)
+                    if(dcache[0][addr.idx].valid && dcache[1][addr.idx].valid && 
+                    dcache[0][addr.idx].tag == addr.tag && dcache[1][addr.idx].tag == addr.tag)
+                    begin
+                        dcif.dhit = 1;
+                        if (dcache[0][addr.idx].dirty)
+                        begin
+                            dcif.dmemload = dcache[0][addr.idx].data[addr.blkoff];
+                            ndcache[0][addr.idx].dirty = dcache[0][addr.idx].dirty; //might not need this line
+                            ndcache[0][addr.idx].data[addr.blkoff] = dcif.dmemWEN ? dcif.dmemstore : dcache[0][addr.idx].data[addr.blkoff];
+                            // ndcache[1][addr.idx].valid = 0;
+                            nLRU[addr.idx] = 1;
+                        end
+                        else
+                        begin
+                            dcif.dmemload = dcache[1][addr.idx].data[addr.blkoff];
+                            ndcache[1][addr.idx].dirty = dcache[1][addr.idx].dirty; //might not need this line
+                            ndcache[1][addr.idx].data[addr.blkoff] = dcif.dmemWEN ? dcif.dmemstore : dcache[1][addr.idx].data[addr.blkoff];
+                            // ndcache[0][addr.idx].valid = 0;
+                            nLRU[addr.idx] = 0;
+                        end
+                    end
+                    else if(dcache[0][addr.idx].valid && dcache[0][addr.idx].tag == addr.tag)
                     begin
                         dcif.dhit = 1;
                         dcif.dmemload = dcache[0][addr.idx].data[addr.blkoff];
