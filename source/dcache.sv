@@ -47,7 +47,13 @@ module dcache(
     state currState;
     state nState;
 
-    logic check, checkFF;
+    logic check, checkFF, linkValid, nLinkValid;
+
+    logic [31:0] nlinkReg, linkReg, blkAddr, snoopBlkAddr; //should we update on posedge or negedge
+    //zero out 3 LSB bits
+
+    assign blkAddr = {dcif.dmemaddr[31:3], 3'b0};
+    assign snoopBlkAddr = {cif.ccsnoopaddr[31:3], 3'b0};
 
     assign cif.ccwrite = dcif.dmemWEN;
 
@@ -68,6 +74,8 @@ module dcache(
             dmemRENFF <= 0;
             //cif.dwait <= 0;
             checkFF <= 0;
+            linkReg <= 0;
+            linkValid <= 0;
         end
         else
         begin
@@ -84,6 +92,8 @@ module dcache(
             cif.dREN <= ndREN;
             dmemRENFF <= dcif.dmemREN;
             checkFF <= check;
+            linkReg <= nlinkReg;
+            linkValid <= nLinkValid;
             //cif.dwait <= cif.dwait;
         end
     end
@@ -169,8 +179,16 @@ module dcache(
         dcif.dmemload = 0;
         dcif.flushed = 0;
 
-        if(cif.ccinv)
+        nlinkReg = linkReg;
+        nLinkValid = linkValid;
+
+        if(cif.ccinv) //Figured out error, happens when tags are matched in both sets
+        //Figure out a way to maintain dirty bit throughout SDAT0 and SDAT1;
         begin
+            if(snoopBlkAddr == linkReg && linkValid)
+            begin
+                nLinkValid = 0;
+            end
             if(cif.ccwait && dcache[0][snoopaddr.idx].tag == snoopaddr.tag && dcache[0][snoopaddr.idx].valid &&
                 dcache[1][snoopaddr.idx].valid && dcache[1][snoopaddr.idx].tag == snoopaddr.tag
             )
@@ -259,6 +277,11 @@ module dcache(
                 end
                 else if(dcif.dmemREN)
                 begin
+                    if(dcif.datomic)
+                    begin
+                        nLinkValid = 1;
+                        nlinkReg = blkAddr;
+                    end
                     if(dcache[0][addr.idx].valid && dcache[1][addr.idx].valid && 
                     dcache[0][addr.idx].tag == addr.tag && dcache[1][addr.idx].tag == addr.tag)
                     begin
@@ -310,6 +333,10 @@ module dcache(
                 end
                 else if(dcif.dmemWEN)
                 begin
+                    if(!dcif.datomic && linkReg == blkAddr && linkValid)
+                    begin
+                        nLinkValid = 0; //normal store words to lock
+                    end
                     if(dcache[0][addr.idx].valid && dcache[0][addr.idx].tag == addr.tag && dcache[0][addr.idx].dirty)
                     begin
                         dcif.dhit = 1;
@@ -318,6 +345,20 @@ module dcache(
                         ndcache[0][addr.idx].data[addr.blkoff] = dcif.dmemWEN ? dcif.dmemstore : dcache[0][addr.idx].data[addr.blkoff];
                         nhit_counter = hit_counter + 1;
                         nLRU[addr.idx] = 1;
+                        if(dcif.datomic)
+                        begin
+                            if(linkReg == blkAddr && linkValid)
+                            begin
+                                dcif.dmemload = 1;
+                            end
+                            else
+                            begin
+                                ndcache = dcache;
+                                nLRU = LRU;
+                                dcif.dmemload = 0;
+                            end
+                            nLinkValid = 0;
+                        end
                     end
                     else if(dcache[1][addr.idx].valid && dcache[1][addr.idx].tag == addr.tag && dcache[1][addr.idx].dirty)
                     begin
@@ -327,6 +368,20 @@ module dcache(
                         ndcache[1][addr.idx].data[addr.blkoff] = dcif.dmemWEN ? dcif.dmemstore : dcache[1][addr.idx].data[addr.blkoff];
                         nhit_counter = hit_counter + 1;
                         nLRU[addr.idx] = 0;
+                        if(dcif.datomic)
+                        begin
+                            if(linkReg == blkAddr && linkValid)
+                            begin
+                                dcif.dmemload = 1;
+                            end
+                            else
+                            begin
+                                ndcache = dcache;
+                                nLRU = LRU;
+                                dcif.dmemload = 0;
+                            end
+                            nLinkValid = 0;
+                        end
                     end
                     //Misses
                     else if(dcache[LRU[addr.idx]][addr.idx].dirty)
@@ -366,22 +421,29 @@ module dcache(
             //Swap ALLOCATE1 and ALLOCATE2
             begin
                 //need to wait for RAMx
+                if(dcif.datomic && (linkReg != blkAddr || !linkValid))
+                begin
+                    nState = ALLOCATE2; //if invalid SC don't read
+                end
+                else
+                begin
 
                 //miss = 1;
-                ndREN = 1;
-                // cif.cctrans = dcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].dirty;
+                    ndREN = 1;
+                    // cif.cctrans = dcache[LRU[cif.ccsnoopaddr[5:3]]][cif.ccsnoopaddr[5:3]].dirty;
 
-                ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
-                if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
-                begin
-                    ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
-                    ndcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff] = cif.dload;
-                    ndcache[LRU[addr.idx]][addr.idx].valid = 1;
-                    ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
-                    nState = ALLOCATE2;
-                    ndREN = 0;
-                    // dcif.dhit = 1;
-                    // nState = IDLE;
+                    ndaddr = {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
+                    if(!cif.dwait && cif.daddr == {addr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
+                    begin
+                        ndcache[LRU[addr.idx]][addr.idx].tag = addr.tag;
+                        ndcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff] = cif.dload;
+                        ndcache[LRU[addr.idx]][addr.idx].valid = 1;
+                        ndcache[LRU[addr.idx]][addr.idx].dirty = 0;
+                        nState = ALLOCATE2;
+                        ndREN = 0;
+                        // dcif.dhit = 1;
+                        // nState = IDLE;
+                    end
                 end
             end
             ALLOCATE2:
@@ -398,6 +460,20 @@ module dcache(
                     //miss = 0;
                     nLRU[addr.idx] = ~LRU[addr.idx];
                     nState = IDLE;
+                    if(dcif.datomic)
+                    begin
+                        if(linkReg == blkAddr && linkValid)
+                        begin
+                            dcif.dmemload = 1;
+                        end
+                        else
+                        begin
+                            ndcache = dcache;
+                            nLRU = LRU;
+                            dcif.dmemload = 0;
+                        end
+                        nLinkValid = 0;
+                    end
                     // nState = ALLOCATE2;
                 end
                 else

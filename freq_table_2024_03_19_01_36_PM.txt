@@ -1,4 +1,0 @@
-Frequency Sweep Report File 2024_03_19_01_36_PM
-Frequency table for LAT = 0 85C Model
-# Halted at 15920 time and ran for        795 cycles.
-Frequency table for LAT = 2 85C Model

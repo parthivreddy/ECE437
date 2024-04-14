@@ -1,0 +1,10 @@
+Frequency Sweep Report File 2024_04_11_05_01_PM
+Frequency table for LAT = 0 85C Model
++------------+-----------------+---------------------+------+
+; Fmax       ; Restricted Fmax ; Clock Name          ; Note ;
++------------+-----------------+---------------------+------+
+; 63.54 MHz  ; 63.54 MHz       ; CPUCLK              ;      ;
+; 75.83 MHz  ; 75.83 MHz       ; altera_reserved_tck ;      ;
+; 156.96 MHz ; 156.96 MHz      ; CLK                 ;      ;
++------------+-----------------+---------------------+------+
+# Halted at 317000 time and ran for      15849 cycles.

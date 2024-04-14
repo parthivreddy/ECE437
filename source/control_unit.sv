@@ -29,6 +29,8 @@ module control_unit (
     ctif.LUI = 0;
     ctif.halt = 0;
     ctif.JR = 0;
+    ctif.LL = 0;
+    ctif.SC = 0;
 
     casez(ctif.opcode)
     RTYPE: //R type
@@ -177,6 +179,25 @@ module control_unit (
     6'b111111: //HALT
     begin
         ctif.halt = 1;
+    end
+    6'b110000: //LL
+    begin
+        ctif.LL = 1;
+        ctif.MemRead = 1;
+        ctif.ALUCtrl = ALU_ADD;
+        ctif.ExtOp = 1;
+        ctif.MemtoReg = 1;
+        ctif.ALUSrc = 1;
+        ctif.RegWr = 1;
+    end
+    6'b111000: //SC
+    begin
+        ctif.SC = 1;
+        ctif.MemWrite = 1; //always 1?
+        ctif.ALUCtrl = ALU_ADD;
+        ctif.ExtOp = 1;
+        ctif.ALUSrc = 1;
+        ctif.RegWr = 1;
     end
     endcase
   end

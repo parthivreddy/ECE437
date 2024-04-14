@@ -29,7 +29,7 @@ module hazard_unit (
             huif.stall_all = 1;
         end
 
-        else if ((huif.stage2_MemRead && !huif.branch) && 
+        else if (((huif.stage2_MemRead || huif.stage2_SC) && !huif.branch)&& 
             ((huif.stage2_rt == huif.stage1_rs) ||
             (huif.stage2_rt == huif.stage1_rt))) begin
 

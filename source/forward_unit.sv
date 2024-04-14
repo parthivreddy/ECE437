@@ -11,7 +11,6 @@ import cpu_types_pkg::*;
         fuif.forwardB = 2'b00;
         if(fuif.stage3_RegWr && fuif.stage3_rd != 0)
         begin
-
             if(fuif.stage3_rd == fuif.stage2_rs)
             begin
                 fuif.forwardA = 2'b10;

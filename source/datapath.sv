@@ -82,6 +82,7 @@ module datapath (
   assign huif.stage3_MemRead = dpif.dmemREN;
   assign huif.stage3_MemWrite = dpif.dmemWEN;
   assign huif.ihit = dpif.ihit;
+  assign huif.stage2_SC = stage2.SC;
 
 
   //Forward Unit inputs
@@ -169,6 +170,8 @@ module datapath (
         nstage2.LUI = ctif.LUI;
         nstage2.RegWr = ctif.RegWr;
         nstage2.halt = ctif.halt;
+        nstage2.LL = ctif.LL;
+        nstage2.SC = ctif.SC;
     end
   end
 
@@ -208,7 +211,7 @@ module datapath (
           begin
             nstage3.rdat2 = stage4.PC_plus_four;
           end
-          else if(stage4.MemRead) //will only happen between stage2 and 4 for storing right after lw
+          else if(stage4.MemRead || stage4.SC) //will only happen between stage2 and 4 for storing right after lw
           begin
             nstage3.rdat2 = stage4.dmemload;
           end
@@ -243,6 +246,8 @@ module datapath (
         nstage3.LUI = stage2.LUI;
         nstage3.RegWr = stage2.RegWr;
         nstage3.halt = stage2.halt;
+        nstage3.LL = stage2.LL;
+        nstage3.SC = stage2.SC;
 
         //maybe halt stage 3 hecking flushes from hazard
 
@@ -276,6 +281,7 @@ always_comb begin : STG4
         nstage4.Link = stage3.Link;
         nstage4.LUI = stage3.LUI;
         nstage4.RegWr = stage3.RegWr;
+        nstage4.SC = stage3.SC;
         // nstage4.halt = stage3.halt;
     end
 end
@@ -354,7 +360,7 @@ always_comb begin : ALUINTS
     begin
       alif.port_a = stage4.PC_plus_four;
     end
-    else if(stage4.MemtoReg)
+    else if(stage4.MemtoReg || stage4.SC)
     begin
       alif.port_a = stage4.dmemload;
     end
@@ -401,7 +407,7 @@ always_comb begin : ALUINTS
     begin
       alif.port_b = stage4.PC_plus_four;
     end
-    else if(stage4.MemtoReg)
+    else if(stage4.MemtoReg || stage3.SC)
     begin
       alif.port_b = stage4.dmemload;
     end
@@ -421,6 +427,7 @@ assign alif.op = aluop_t'(stage2.ALUCtrl);
 
 //outputs to ram
 assign dpif.dmemaddr = stage3.ALU_output;
+assign dpif.datomic = stage3.LL || stage3.SC;
 //assign dpif.dmemstore = (fuif.forwardB == 2'b01) ? stage4.rdat2 : stage3.rdat2;
 // assign dpif.dmemstore = (fuif.forwardA != 0 || fuif.forwardB != 0) ? (stage3.ALU_output) : stage3.rdat2;
 assign dpif.dmemstore = stage3.rdat2;
