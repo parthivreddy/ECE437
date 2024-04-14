@@ -496,7 +496,14 @@ always_comb begin : PCUPDT
           end
           else if(fuif.forwardA == 1)
           begin
-            nPC = stage4.ALU_output;
+            if(stage4.MemRead)
+            begin
+              nPC = stage4.dmemload;
+            end
+            else
+            begin
+              nPC = stage4.ALU_output;
+            end
           end
           else
           begin
