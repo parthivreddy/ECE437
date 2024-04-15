@@ -447,7 +447,7 @@ always_comb begin : RGFILE
         begin
             rfif.wdat = stage4.PC_plus_four;
         end
-        else if(stage4.MemtoReg)
+        else if(stage4.MemtoReg || stage4.SC)
         begin
             rfif.wdat = stage4.dmemload;
         end
