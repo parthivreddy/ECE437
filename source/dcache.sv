@@ -55,7 +55,7 @@ module dcache(
     assign blkAddr = {dcif.dmemaddr[31:3], 3'b0};
     assign snoopBlkAddr = {cif.ccsnoopaddr[31:3], 3'b0};
 
-    assign cif.ccwrite = dcif.dmemWEN;
+    //assign cif.ccwrite = WENfirst;
 
     always_ff @(posedge CLK, negedge nRST) begin : nST
         if(!nRST)
@@ -103,6 +103,7 @@ module dcache(
         nfirstSt = firstSt;
         WENfirst = 0;
         RENfirst = 0;
+        cif.ccwrite = 0;
         case(firstSt)
             IDLEfirst:
             begin
@@ -126,6 +127,7 @@ module dcache(
             WEN:
             begin
                 WENfirst = 1;
+                cif.ccwrite = 1;
                 if(!dcif.dmemWEN)
                 begin
                     //WENfirst = 0;
