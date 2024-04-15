@@ -410,9 +410,12 @@ module dcache(
             WB1: //writing LRU data into RAM
             begin
                 // cif.daddr = dmemaddrFF;
-                ndaddr = {oldaddr.tag, addr.idx, addr.blkoff, addr.bytoff};
-                ndstore = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
-                ndWEN = 1;
+                if(!checkFF)
+                begin
+                    ndaddr = {oldaddr.tag, addr.idx, addr.blkoff, addr.bytoff};
+                    ndstore = dcache[LRU[addr.idx]][addr.idx].data[addr.blkoff];
+                    ndWEN = 1;
+                end
                 if(!cif.dwait && cif.daddr == {oldaddr.tag, addr.idx, addr.blkoff, addr.bytoff})
                 begin
                     ndWEN = 0;
@@ -421,9 +424,12 @@ module dcache(
             end
             WB2:
             begin
-                ndaddr = {oldaddr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
-                ndstore = dcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff];
-                ndWEN = 1;
+                if(!checkFF)
+                begin
+                    ndaddr = {oldaddr.tag, addr.idx, ~addr.blkoff, addr.bytoff};
+                    ndstore = dcache[LRU[addr.idx]][addr.idx].data[~addr.blkoff];
+                    ndWEN = 1;
+                end
                 if(!cif.dwait && cif.daddr == {oldaddr.tag, addr.idx, ~addr.blkoff, addr.bytoff})
                 begin
                     ndWEN = 0;
